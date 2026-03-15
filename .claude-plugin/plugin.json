@@ -1,0 +1,14 @@
+{
+  "name": "prompt-best-practices",
+  "version": "0.1.0",
+  "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's official prompting best practices. Optimizes unstructured prompts through guided dialogue.",
+  "author": {
+    "name": "Giandemetrio Quattromani"
+  },
+  "repository": "https://github.com/gquattromani/prompt-best-practices",
+  "license": "MIT",
+  "keywords": ["prompt-engineering", "prompt-optimization", "agent-skills", "structured-prompts"],
+  "skills": [
+    "./skill"
+  ]
+}

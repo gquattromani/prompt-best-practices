@@ -1,17 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/marketplace/marketplace.schema.json",
   "name": "prompt-best-practices",
-  "version": "1.0.0",
   "owner": {
     "name": "Giandemetrio Quattromani"
   },
   "metadata": {
-    "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's official prompting best practices. Optimizes unstructured prompts through guided dialogue."
+    "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's official prompting best practices. Tier-adaptive dialogue, deterministic component rubric, and activation-regression fixtures."
   },
   "plugins": [
     {
       "name": "prompt-best-practices",
-      "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's official prompting best practices. Optimizes unstructured prompts through guided dialogue.",
+      "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's official prompting best practices. Tier-adaptive dialogue, deterministic component rubric, and activation-regression fixtures.",
       "repository": "https://github.com/gquattromani/prompt-best-practices",
       "author": {
         "name": "Giandemetrio Quattromani"

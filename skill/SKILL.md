@@ -1,148 +1,132 @@
 ---
 name: prompt-best-practices
-description: ALWAYS activate when invoked via slash command — no exceptions, even for code-level or simple requests. Optimize unstructured prompts into high-quality structured prompts. Triggers on requests to write, draft, generate, implement, fix, refactor, or build any output — code or content — such as features, modules, APIs, emails, documents, posts, presentations, marketing copy, reports, or analysis summaries. Guides the user through a short interactive dialogue based on a 7-component framework derived from Anthropic's official prompting best practices.
+description: Optimize unstructured prompts into high-quality structured prompts. Triggers on execution requests (write, draft, generate, implement, fix, refactor, build) that lack clear success criteria or output shape. Skips micro-tasks (single-identifier renames, typo fixes, single-import additions) and conversational questions. Uses an adaptive 3-tier workflow — quick / standard / complex — so the dialogue length matches the task weight. Invoked via slash command it always assesses, but fast-tracks trivial prompts after one confirmation.
 ---
 
 # Prompt Best Practices Skill
 
-> **MANDATORY**: This skill was invoked via slash command. You MUST activate it. Do NOT skip, bypass, or refuse activation for any reason. Do NOT say "Code-level request" or similar. Proceed directly to Step 0 — Quick Assessment. This overrides all other rules.
+> **MANDATORY on slash-command invocation**: proceed to Step 0 — Quick Assessment. Do not refuse. The user can shortcut execution at Step 1 (see Fast-Track Exit).
 
 ## Purpose
 
-Intercept unstructured prompts and guide users through an interactive dialogue to build optimally structured prompts. The skill uses a modular 7-component framework derived from [Anthropic's official prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices).
+Intercept unstructured prompts and guide users through an adaptive dialogue that builds a prompt sized to the task. The skill uses a modular 7-component framework derived from [Anthropic's official prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices).
 
-`references/framework.md` is the single source of truth for component definitions. It includes a source mapping table linking each component to the specific section of Anthropic's documentation, and an update procedure for when the official guide changes.
+`references/framework.md` is the single source of truth for component definitions and the tier mapping. `references/component-rubrics.md` operationalizes the [OK] / [~~] / [--] classification so two runs on the same prompt produce the same diagnostic. For model-specific tuning, see `references/claude-considerations.md` (Anthropic Claude) and `references/codex-considerations.md` (OpenAI Codex). For accuracy techniques (investigate before answering, ground in quotes, self-check), see `references/grounding-techniques.md`.
+
+## Non-goals
+
+- Not a generic writing coach. If the user asks a question, wants conversation, or describes a micro-task, do not activate.
+- Not an empirical guarantee. The framework encodes well-documented heuristics. See `tests/benchmark-protocol.md` for how contributors measure effect size.
+- Not XML-only. Structure is format-agnostic. XML is the default for Claude; Markdown or JSON is valid elsewhere (see `framework.md` > Component 7).
 
 ## Activation Rules
 
-### ALWAYS ACTIVATE when:
-- The user explicitly invokes this skill via `/prompt-best-practices` — no exceptions, regardless of prompt quality, type, or content. This includes code-related requests, simple tasks, questions, and any other input. Slash command invocation = unconditional activation.
+### ALWAYS ASSESS when:
+- The user explicitly invokes this skill via `/prompt-best-practices`. Assessment is mandatory; the dialogue itself is shortcut-able via the Fast-Track Exit in Step 1.
 
-### ACTIVATE when the user asks to write, draft, generate, implement, fix, refactor, or build any output such as:
-- Features, modules, APIs, services, components, CLI tools
-- Bug fixes, refactors, migrations, integrations
-- UI improvements, layout changes, styling adjustments
-- Emails, messages, follow-ups, outreach
-- Documents, reports, proposals, briefs
-- Social media posts, marketing copy, announcements
-- Presentations, pitches, executive summaries
-- Analysis summaries, data narratives, insights reports
-- Any other output — code or content — that lacks clear structure or success criteria
+### AUTO-ACTIVATE when all of the following are true:
+1. The request is an **execution request** (verb: write, draft, generate, implement, fix, refactor, build, create, design, analyze) that produces an artifact.
+2. The task is **standard or complex** tier (see `framework.md` > Task Tiers). Quick-tier tasks are not auto-activated — they are self-contained enough that a 2-component prompt is sufficient.
+3. The prompt has **fewer components than the tier requires** (quick: 2, standard: 3-4, complex: 5+ — see `framework.md`).
 
-The prompt must have fewer than 3 of the 7 framework components to trigger activation.
+### DO NOT ACTIVATE when:
+- The request is a **micro-task** (rename a single identifier, fix a typo, add a missing import, apply a linter suggestion). The codebase supplies all the context the model needs.
+- The request is a **question** or conversational exchange ("what is X?", "how does Y work?", "explain Z").
+- The user explicitly asks to execute immediately ("just do it", "execute now", "skip optimization", "no prompt").
+- The prompt meets the tier's component threshold (checked via `component-rubrics.md`).
 
-### DO NOT ACTIVATE when (only applies to auto-activation, never to explicit slash command invocation):
-- The user explicitly says to execute immediately ("just do it", "execute now", "skip optimization")
-- The prompt already has 3+ framework components
-- The request is a simple question or conversational exchange
-- The request is a small, self-contained task (rename a variable, fix a typo, add an import)
+### Fast-Track Exit (all activation modes)
+At Step 1 the user can type `skip`, `go`, `execute`, or `as-is` (any language equivalent) to exit the dialogue and run the original prompt unchanged. This is the documented escape; always offer it in the Step 1 message.
 
 ## Workflow
 
-### Step 0 - Quick Assessment
+### Step 0 — Quick Assessment
 
-Count how many of these 7 components are present in the user's prompt (see `references/framework.md` for details):
-1. **Task** — Clear action + measurable success criteria
-2. **Role** — Defined expertise area or persona
-3. **Context** — Relevant documents/data, structured
-4. **Examples** — Concrete examples of desired output
-5. **Output specification** — Format, tone (positive framing), audience impact, anti-patterns, success metric
-6. **Constraints** — Rules with motivation (why each exists)
-7. **Structure** — Structured delimiters (XML tags recommended) wrapping distinct sections
+Two-pass assessment:
 
-If this skill was invoked via slash command, always proceed to Step 1 regardless of the score. Otherwise, if 3+ components are present, do not activate.
+**Pass A: Task tier classification.** Read the prompt and pick one tier (definitions in `framework.md` > Task Tiers):
+- **Quick** — trivial, self-contained artifact (1-3 minutes of human work). Example: "write a commit message for this diff". Required components: 2 (Task + Output spec).
+- **Standard** — bounded artifact with stakes or conventions (15-60 min of human work). Example: "write a PR description" or "add a Zod schema validator". Required components: 3-4 (Task + Output spec + Examples or Constraints).
+- **Complex** — open-ended artifact with multiple stakeholders, accuracy-critical constraints, or external context (>1 hr of human work). Example: "migrate the auth middleware to JWT". Required components: 5+ (all that add value).
 
-### Step 1 - Diagnosis Message
+**Pass B: Component count.** Check the 7 components against `references/component-rubrics.md` and mark each `[OK]`, `[~~]`, or `[--]`. The rubric turns subjective judgment into a checklist.
 
-Present a visual diagnostic using text indicators:
-- `[OK]` for present components
-- `[--]` for missing components
-- `[~~]` for partially present components
+Slash-command invocation always proceeds to Step 1. Auto-activation follows the Activation Rules.
 
-Follow with a brief, collaborative message explaining that building the prompt together will produce significantly better results. Ask if the user wants to proceed with the guided dialogue or execute as-is.
+### Step 1 — Diagnosis Message
 
-Example format:
+Present the diagnostic with the tier, the component grid, and the Fast-Track Exit offer.
+
+Template:
 ```
 Prompt analysis:
 
-[~~] Task partial (action detected, but no success criteria)
-[--] Role missing
-[--] Context missing
-[--] Examples missing
-[--] Output specification missing
-[--] Constraints missing
-[--] Structure missing (no delimiters)
+Tier detected: {quick|standard|complex} (required: {N} components)
 
-Let's build a structured prompt together. It takes 3-5 quick questions
-to get significantly better results. Or I can proceed right away with the current prompt.
+[OK] Task          — <one-line rationale>
+[~~] Role          — <one-line rationale>
+[--] Context       — <one-line rationale>
+[--] Examples      — <one-line rationale>
+[--] Output spec   — <one-line rationale>
+[--] Constraints   — <one-line rationale>
+[--] Structure     — <one-line rationale>
+
+{M} of {N} required components are already in place.
+
+Want to build the missing pieces together (≈{K} quick questions), or should I run it as-is?
+Reply: "go" to build, "skip" to execute unchanged.
 ```
 
-### Step 2 - Guided Dialogue (One Question at a Time)
+`K` is the remaining dialogue length (never more than the tier's ceiling: quick=2, standard=3, complex=5).
 
-Ask ONE question per message, following this priority order:
+### Step 2 — Guided Dialogue (Adaptive)
 
-**Priority 1 - Task + Success Criteria** (always first)
-- Explain: defining what success looks like transforms vague requests into precise instructions
-- Ask: "What specific outcome do you need, and how will you know it succeeded?"
-- Provide 2-3 concrete examples relevant to their request
+Ask ONE question per message, capped by tier:
+- **Quick** tier: max 2 questions (Task success criteria, then Output spec).
+- **Standard** tier: max 3 questions (Task, Output spec, + one of {Examples, Constraints}).
+- **Complex** tier: max 5 questions (full priority order below).
 
-**Priority 2 - Output specification** (second)
-- Explain: describing the desired tone and format steers the model more effectively than listing what to avoid
-- Ask about: output type, approximate length, desired tone (what it SHOULD sound like), what to avoid (secondary), what "success" means for the audience
-- Lead with positive framing: "What should the output sound like?" before "What should it NOT sound like?"
-- Provide 2-3 examples
+Priority order (run only the top `K` from this list, where K = tier cap minus components already `[OK]`):
 
-**Priority 3 - Examples** (third)
-- Explain: 3-5 well-crafted examples anchor quality more reliably than abstract instructions
-- Ask: "Do you have examples of what you want the result to look like? Even one helps — more is better."
-- Offer to help extract patterns from their examples
-- If no examples available, offer to describe the desired output style as a reference
+1. **Task + Success Criteria** — "What outcome do you need, and how will you know it succeeded?"
+2. **Output specification** — "What should the output look like (format, length, tone)?" Lead positive; ask anti-patterns only if the user volunteers them or the task is accuracy-critical.
+3. **Examples** — "Do you have a reference example of the desired result? Even one helps."
+4. **Constraints** — "Any rules to respect (style guide, architecture, brand voice)? For each, the reason matters." For accuracy-critical tasks, suggest grounding constraints from `references/grounding-techniques.md`.
+5. **Role + Context** — "Is there a specific expertise the agent should bring, and any files/documents to read first?"
 
-**Priority 4 - Constraints** (fourth)
-- Explain: rules with motivation (why they exist) are followed more reliably than bare constraints
-- Ask if they have existing style guides, brand guidelines, or rules they want respected
-- For each rule, ask: "Why is this important?" — the motivation helps the model generalize
-- **Accuracy-critical tasks:** if the task involves an existing codebase, documents, or data, suggest adding grounding constraints: "investigate before answering" (read sources before responding), "ground in quotes" (quote relevant passages first), or "self-check" (verify output against criteria before finalizing). See `references/framework.md` > Grounding and accuracy for details.
+Dialogue rules:
+- Keep each question's explanation to 1 line max.
+- Give 2-3 concrete example answers tailored to the user's prompt.
+- If the user says "I don't know", suggest a reasonable default and confirm in one sentence.
+- If the user signals impatience ("let's go", "that's enough", "hurry"), stop asking and build the prompt with what you have.
+- Obey the tier cap. Do not ask more questions than the tier allows, even if components are still missing — the framework is modular.
 
-**Priority 5 - Role + Context** (fifth)
-- Ask if there's a specific expertise the agent should bring, and if there are documents/files to reference
-- Provide examples: "senior backend engineer", "brand copywriter", "financial analyst"
-- If the task already implies a clear role, suggest it and confirm
+### Step 3 — Build Final Prompt
 
-For each question:
-- Keep the explanation to 1 line maximum
-- Make the question specific and concrete
-- Provide 2-3 example answers tailored to their specific request
-- Wait for the user's response before moving to the next component
-- If the user says "I don't know" or skips, suggest a reasonable default and confirm
+Construct the final prompt using the template in `framework.md` > Final Prompt Template. Apply Component 7 (Structure) using the format appropriate for the target runtime:
+- **Claude** → XML tags (default, strongest)
+- **Codex / other** → Markdown headings or XML (both work; see `codex-considerations.md`)
 
-### Step 3 - Build Final Prompt
+Adapt the template: include only the sections the tier and dialogue produced. Quick-tier prompts with just `<task>` and `<output_spec>` are valid and preferred to padding.
 
-After collecting all necessary information, construct the final prompt following the template in `references/framework.md` > Final Prompt Template. Apply Component 7 (Structure) automatically. Present the prompt to the user formatted and with labeled sections.
+Present the prompt, then ask for one-word confirmation before executing.
 
-Ask for confirmation before executing. Once confirmed, execute the optimized prompt.
+### Step 4 — Refinement (optional)
 
-Adapt the template: omit sections the user chose to skip. The final prompt must be immediately executable without further edits. For quick tasks, a prompt with just `<task>` and `<output_spec>` is perfectly valid.
-
-### Step 4 - Refinement (optional)
-
-If the user asks to modify the generated prompt, adjust only the requested components and re-present the updated prompt. Do not restart the dialogue from Step 1.
+If the user asks to modify the generated prompt, adjust only the requested components and re-present. Do not restart the dialogue.
 
 ## Tone and Style
 
-- Collaborative, never judgmental
-- Brief explanations (1 line per concept)
-- Do not use emoji — use text indicators `[OK]`, `[--]`, `[~~]` for the diagnostic checklist
-- Keep the dialogue moving: 4-5 questions maximum
-- If the user shows impatience, compress remaining questions into one summary question
-- Respond in the same language as the user's prompt. If the language is ambiguous, ask.
+- Collaborative, never judgmental.
+- Brief explanations (1 line per concept).
+- Do not use emoji — use text indicators `[OK]`, `[--]`, `[~~]`.
+- Respect the tier cap: do not extend the dialogue past the ceiling.
+- Respond in the same language as the user's prompt. If ambiguous, ask.
 
 ## Edge Cases
 
-- **User wants to skip**: respect immediately, execute the original prompt as-is
-- **User provides partial answers**: incorporate what they give, suggest defaults for gaps
-- **User's prompt is already good (3-4 components)**: show diagnostic, highlight only the missing components, offer quick additions instead of full dialogue
-- **User's prompt is excellent (5+ components)**: do NOT activate, let it execute normally
-- **User provides multiple components upfront**: if the user supplies 3+ components in a single message, skip the dialogue for those components. Only ask about what is missing.
-- **Code-related requests**: activate normally — a vague coding prompt benefits from structured dialogue just like any other task. Code requests are NOT exempt from this skill.
-- **Mixed intent**: if the prompt contains both a question and an execution request, address the question directly and only offer optimization for the execution part
+- **Partial answers**: incorporate what the user gives, suggest defaults for gaps, confirm in one sentence, move on.
+- **Components supplied upfront in a single message**: skip what is already there; ask only about what the tier still requires.
+- **Mixed intent (question + execution request)**: answer the question directly, then offer optimization only for the execution part.
+- **Target runtime is OpenAI Codex**: consult `references/codex-considerations.md` — no upfront plans, explicit parallelization, `apply_patch` format, phase-aware output. The 7 components map directly onto Codex's Starter Prompt sections.
+- **User invoked the skill by mistake**: Fast-Track Exit is the documented escape. Do not argue; run the original prompt.

@@ -2,13 +2,20 @@
 
 An AI agent skill that transforms unstructured prompts into high-quality structured prompts through a short interactive dialogue. Works with any AI agent that supports the [Agent Skills](https://agentskills.io/) open standard.
 
-The 7-component framework was built by studying the prompting guidelines published by the major LLM providers. The primary reference is [Anthropic's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), the most comprehensive publicly available guide on the subject, with each component mapped to a specific section of that documentation. The underlying principles — clear tasks, structured context, concrete examples, well-motivated constraints — are shared across providers and improve output quality on any LLM.
+**First-class support for both Anthropic Claude and OpenAI Codex.** The 7-component framework was built by studying the prompting guidelines published by the major LLM providers. The canonical reference is [Anthropic's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) — the most comprehensive publicly available guide on the subject — with each component mapped to a specific section of that documentation. The framework then maps 1:1 onto the [OpenAI Codex Starter Prompt sections](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide), and dedicated tuning notes for each runtime live in `skill/references/claude-considerations.md` and `skill/references/codex-considerations.md`. The underlying principles — clear tasks, structured context, concrete examples, well-motivated constraints — are shared across providers and improve output quality on any LLM.
 
 ## The Problem
 
 Most prompts sent to AI agents lack the structure needed to produce reliable, high-quality output. Users provide a vague goal — "write me an email", "build this feature" — without defining success criteria, output format, constraints, or context. The model fills in the blanks with assumptions, and what follows is multiple rounds of corrections to converge on what the user actually wanted.
 
-This skill eliminates that cycle. It intercepts underspecified prompts and guides you through 3-5 targeted questions to surface the missing information. The result is a structured prompt that any LLM-based agent can execute correctly on the first pass.
+This skill reduces that cycle. It intercepts underspecified prompts and guides you through a short, tier-adaptive dialogue (up to 2 questions for quick tasks, up to 5 for complex ones) to surface the missing information. The result is a structured prompt sized to the task weight.
+
+## Non-goals
+
+- **Not a guarantee** of better output. The framework encodes well-documented heuristics but makes no empirical claim without a benchmark run. See `tests/benchmark-protocol.md` for how to measure effect size on your workload.
+- **Not a generic writing coach.** It skips questions, micro-tasks, and conversational exchanges. See `tests/activation-fixtures.md` for the exact contract.
+- **Not XML-only.** Structure is format-agnostic (XML, Markdown, JSON all qualify). XML is the Claude default.
+- **Not a framework factory.** The 7 components are the framework. PRs adding new components belong in a fork. See [CONTRIBUTING.md](CONTRIBUTING.md) > Scope and non-goals.
 
 ## Demo
 
@@ -20,17 +27,17 @@ This skill eliminates that cycle. It intercepts underspecified prompts and guide
 
 One command. No configuration, no dependencies, no setup files to edit.
 
-### Claude Code Plugin (recommended)
+### Via `skills.sh` (any compatible agent)
+
+```bash
+npx skills add gquattromani/prompt-best-practices -g -y
+```
+
+### Via Claude Code plugin
 
 ```
 /plugin marketplace add gquattromani/prompt-best-practices
 /plugin install prompt-best-practices@prompt-best-practices
-```
-
-### Via skills.sh (any compatible agent)
-
-```bash
-npx skills add gquattromani/prompt-best-practices -g -y
 ```
 
 This installs the skill globally. It is immediately available in every project, in every agent that supports the [Agent Skills](https://agentskills.io/) standard.
@@ -57,47 +64,46 @@ The skill evaluates your prompt against 7 components, each grounded in a specifi
 | 6 | **Constraints** | Rules with motivation (why each exists) | [Add context to improve performance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#add-context-to-improve-performance) |
 | 7 | **Structure** | Tagged sections for unambiguous parsing | [Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags) |
 
-If fewer than 3 components are present, the skill starts a guided dialogue to fill the gaps. Once complete, it assembles a structured prompt and executes it.
+Components are classified as present / partial / missing using the rubric in `skill/references/component-rubrics.md`, so the diagnostic is reproducible across runs.
+
+The dialogue length is capped by task tier (`skill/references/framework.md` > Task Tiers): up to 2 questions for quick tasks, 3 for standard, 5 for complex. If you prefer to skip the dialogue entirely, reply `skip` or `go` to the first diagnostic message.
 
 ## Compatible Platforms
 
-This skill follows the [Agent Skills](https://agentskills.io/) open standard. It works out of the box with:
+This skill follows the [Agent Skills](https://agentskills.io/) open standard. Any agent that reads `AGENTS.md` and follows Markdown-based skill definitions can load it without modification: Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Roo Code, Goose, Gemini CLI, [and more](https://agentskills.io/).
 
-Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Roo Code, Goose, Gemini CLI, [and more](https://agentskills.io/).
+The 7-component framework applies to every runtime; what varies is the structural format (Component 7) and a handful of runtime-specific constraints. Model-specific tuning notes:
 
-Any agent that reads `AGENTS.md` and follows Markdown-based skill definitions can use it without modification.
+- `skill/references/claude-considerations.md` — Anthropic Claude (Opus 4.7 baseline). XML tags recommended.
+- `skill/references/codex-considerations.md` — OpenAI Codex (`gpt-5.4` baseline). Markdown headings or XML both work; no upfront plans; explicit parallelization.
+
+The framework is most thoroughly tested on Claude because its components map 1:1 onto Anthropic's published guide. Reports on other runtimes are welcome — see `tests/benchmark-protocol.md` to run a comparable evaluation.
 
 ## Uninstall
 
-### Via CLI
+The uninstall procedure depends on how you installed the skill.
+
+### If installed via Claude Code plugin
 
 ```bash
 claude plugin uninstall prompt-best-practices
 ```
 
-To specify the scope:
+Scope flags (optional):
 
 ```bash
-claude plugin uninstall prompt-best-practices --scope user      # global (default)
+claude plugin uninstall prompt-best-practices --scope user       # global (default)
 claude plugin uninstall prompt-best-practices --scope project    # project-level
 claude plugin uninstall prompt-best-practices --scope local      # local only
 ```
 
-### Manual removal
+Verify with `claude plugin list`.
 
-Remove the skill entry from the relevant settings file:
+**Manual fallback (Claude Code):** delete the `prompt-best-practices` entry from the `enabledPlugins` section of the relevant settings file — `~/.claude/settings.json` (user-global), `.claude/settings.json` (project-shared), or `.claude/settings.local.json` (local, git-ignored).
 
-- **User (global):** `~/.claude/settings.json`
-- **Project (shared):** `.claude/settings.json`
-- **Local (git-ignored):** `.claude/settings.local.json`
+### If installed via `skills.sh` or another agent
 
-Delete the skill from the `enabledPlugins` section.
-
-### Verify
-
-```bash
-claude plugin list
-```
+Follow the uninstall procedure documented by your installer or agent. The skill itself requires no special teardown — removing it from the agent's plugin/skill registry is sufficient.
 
 ## Repository Structure
 
@@ -107,13 +113,25 @@ claude plugin list
 ├── assets/                  Media files
 ├── skill/
 │   ├── SKILL.md             Skill entry point
-│   └── references/          Framework and examples
+│   └── references/          Framework, rubrics, examples, model-specific guidance
+├── tests/
+│   ├── activation-fixtures.md   Reference prompts with expected activation outcome
+│   └── benchmark-protocol.md    Protocol to measure framework effect size
 ├── AGENTS.md                Agent navigation guide
 ├── CHANGELOG.md             Version history
+├── CODE_OF_CONDUCT.md       Contributor Covenant
 ├── CONTRIBUTING.md          Contribution guidelines
+├── SECURITY.md              Vulnerability reporting policy
+├── NOTICE.md                Third-party attributions and trademark acknowledgments
 └── LICENSE                  MIT
 ```
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the process and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for the community standard. For security issues, see [SECURITY.md](SECURITY.md) — please do not open a public issue for vulnerabilities.
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+
+For third-party attributions (Anthropic documentation, OpenAI Codex guide, Contributor Covenant) and trademark acknowledgments, see [NOTICE.md](NOTICE.md). Names such as Claude, Anthropic, OpenAI, Codex, ChatGPT, GitHub Copilot, Cursor, Windsurf, Roo Code, Goose, and Gemini CLI are trademarks of their respective owners; this project is independent and is not affiliated with or endorsed by any of them.

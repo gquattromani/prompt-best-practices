@@ -1,14 +1,21 @@
 # Prompt Structuring Framework
 
+## When to Use
+
+This is the single source of truth for the 7-component framework. Load it whenever you need the formal definition of a component, the task-tier mapping, the prompt-assembly template, the source-mapping table to Anthropic's guide, or the update procedure for new guide revisions.
+
+For the operational checklist that turns "is this component present?" into a deterministic answer, see `component-rubrics.md`.
+
 ## Maintenance
 
 | Field | Value |
 |---|---|
 | Source | [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) |
-| Last verified | 2026-04-13 |
-| Verified against | Claude 4.6 (Opus, Sonnet) |
+| Last verified | 2026-04-20 |
+| Verified against | Claude 4.7 (Opus), Claude 4.6 (Sonnet) |
+| Source fingerprint | Opus 4.7 section present; XML-tags section present; length-calibration guidance present. Recompute on update. |
 
-When the source page is updated, follow the [update procedure](#update-procedure) at the bottom of this file.
+When the source page is updated, follow the [update procedure](#update-procedure) at the bottom of this file. The procedure includes a fingerprint diff so a contributor can tell at a glance whether the source page shifted meaningfully since the last verification.
 
 ---
 
@@ -32,7 +39,29 @@ Each component links to the section of the official guide it derives from.
 | 6 | Constraints | [General principles > Add context to improve performance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#add-context-to-improve-performance) | "Explaining to Claude why such behavior is important can help Claude better understand your goals." |
 | 7 | Structure | [General principles > Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags) | "XML tags help Claude parse complex prompts unambiguously." |
 
-Additionally, the [Grounding and accuracy](#grounding-and-accuracy) section and `references/claude-considerations.md` derive from:
+### Task Tiers
+
+The framework is **modular, not prescriptive**. "Modular" is operationalized through three task tiers. Each tier sets the *required* component count and the *dialogue cap* used by `SKILL.md` > Step 2. A prompt meeting or exceeding its tier threshold does not need auto-activation; slash-command invocation still assesses but fast-tracks quickly.
+
+| Tier | Scope signal | Required components | Dialogue cap | Typical template |
+|---|---|---|---|---|
+| **Quick** | Trivial artifact, ~1-3 min of human work. Examples: commit message, single variable rename request, one-line doc comment. | 2 (Task + Output spec) | 2 questions | `<task>` + `<output_spec>` |
+| **Standard** | Bounded artifact with stakes or conventions, ~15-60 min of human work. Examples: PR description, a REST route, a marketing email. | 3-4 (Task + Output spec + Examples or Constraints) | 3 questions | adds `<examples>` or `<constraints>` |
+| **Complex** | Open-ended artifact, multiple stakeholders, accuracy-critical constraints, or external context, >1 hr of human work. Examples: auth rewrite, migration, cross-team announcement. | 5+ (all that add value) | 5 questions | full template |
+
+**Signals for tier detection:**
+
+- **Quick** — the artifact fits in a single paragraph or function; correctness is self-evident; no external context is needed.
+- **Standard** — the task references conventions ("follow our style", "match the existing pattern") or has an audience with expectations; getting it right on the first pass reduces iteration.
+- **Complex** — the task mentions multiple subsystems, compliance/security, external dependencies, or requires reading existing code or documents before writing.
+
+Prefer the lower tier when in doubt. A well-aimed 2-component prompt beats a padded 7-component one.
+
+---
+
+### Additional source mapping
+
+Additionally, `references/grounding-techniques.md` and `references/claude-considerations.md` derive from:
 - [Thinking and reasoning > Overthinking and excessive thoroughness](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#overthinking-and-excessive-thoroughness)
 - [Agentic systems > Overeagerness](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#overeagerness)
 - [Tool use > Tool usage](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#tool-usage)
@@ -209,6 +238,13 @@ Success: The client replies within 48h with a confirmed meeting time
 
 **Framing principle:** Lead with positive descriptions. "Write in flowing prose with complete paragraphs" is more effective than "Don't use bullet points." Anti-patterns are useful but secondary.
 
+**On the coexistence of `Tone` and `Avoid`:** the official guide's "tell what to do, not what not to do" is a *framing priority*, not a prohibition on anti-patterns. Positive descriptions generalize well to the whole output space; anti-patterns are a targeted disambiguator for phrasings the model is known to fall into (e.g., "hope this helps" closings, collection-notice tone, formulaic hedges). The rule is:
+
+- `Tone` is **required** when output_spec is used — it sets the primary direction.
+- `Avoid` is **optional and secondary** — include only when there is a specific anti-pattern worth naming. Never use it as a substitute for positive framing.
+
+If `Avoid` ends up longer than `Tone`, the spec is upside-down; rewrite `Tone` until it covers the same ground positively.
+
 ---
 
 ## Component 6: Constraints
@@ -246,20 +282,36 @@ Flag any potential rule conflict before proceeding.
 > Source: [Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags)
 > "XML tags help Claude parse complex prompts unambiguously, especially when your prompt mixes instructions, context, examples, and variable inputs. Wrapping each type of content in its own tag reduces misinterpretation."
 
-**What it is:** The use of structured delimiters to wrap distinct sections of the prompt, giving each part a clear semantic label. XML tags are the recommended format (and the most tested), but Markdown headings, triple backticks, or other consistent markers also work.
+**What it is:** The use of structured delimiters to wrap distinct sections of the prompt, giving each part a clear semantic label. Structure is *format-agnostic* — what matters is unambiguous separation, not which syntax provides it.
+
+**Format options (all valid):**
+
+| Format | When to prefer | Example |
+|---|---|---|
+| **XML tags** | Claude (default, strongest-tested) | `<task>...</task>` |
+| **Markdown headings** | Codex, models that train heavily on Markdown, human-edited prompts | `## Task\n...` |
+| **JSON** | Programmatic prompt assembly, strict schemas | `{"task": "...", "output_spec": {...}}` |
+| **Fenced blocks with labels** | Inline contexts, chat UIs that strip XML | ` ```task ... ``` ` |
+
+Pick one and use it consistently across the prompt. Mixing formats (XML for some sections, Markdown for others) defeats the purpose.
 
 **What to check for:**
 - Are distinct sections of the prompt wrapped in descriptive delimiters?
 - Are delimiter names consistent and descriptive?
 - Is content with a natural hierarchy nested properly?
+- Is the chosen format appropriate for the target runtime?
 
-**Present if:** The prompt uses structured delimiters to separate at least 2 distinct sections.
+**Present if:** The prompt uses consistent structured delimiters to separate at least 2 distinct sections.
 **Missing if:** The prompt is a flat block of text with no structural markers.
+
+**Runtime-specific defaults:**
+- Claude → XML tags (see `claude-considerations.md`). Parses unambiguously; strongest-tested.
+- Codex → XML or Markdown headings, both work well (see `codex-considerations.md`).
+- Unknown / mixed fleet → XML is the safest single choice.
 
 **Best practices (from the guide):**
 - Use consistent, descriptive names across your prompts.
 - Nest when content has a natural hierarchy (documents inside `<documents>`, each inside `<document index="n">`).
-- **Recommended format:** XML tags provide the strongest semantic separation and are unambiguous for most models. Use them by default unless the target model or platform has a different recommendation.
 
 **Why it matters:** Structure is the only component that doesn't add content — it improves how the model parses the other 6 components.
 
@@ -312,51 +364,19 @@ Flag any potential rule conflict before proceeding.
 
 ## Adaptation Guidelines
 
-Not every prompt needs all 7 components. The framework is modular:
+See the [Task Tiers](#task-tiers) table above for the canonical tier-to-components mapping. The short version:
 
-- **Quick tasks (2 components):** Task + Output specification
-- **Standard tasks (3-4 components):** Task + Output specification + Examples + Constraints
-- **Complex tasks (5-7 components):** All components as needed
+- **Quick tier (2 components):** Task + Output specification
+- **Standard tier (3-4 components):** + Examples or Constraints
+- **Complex tier (5+ components):** + Role, Context, all Constraints with motivation
 
-For Claude-specific guidance (model behaviors, known tendencies, version-specific tips), see `references/claude-considerations.md`.
+`SKILL.md` uses these tiers to cap the dialogue length, keeping short tasks short.
 
-### Grounding and accuracy
+For deterministic component classification (what counts as `[OK]`, `[~~]`, `[--]`), see `component-rubrics.md`.
 
-Three techniques from the official guide help prevent hallucinations and improve factual accuracy. Consider adding these as constraints (Component 6) when accuracy is critical.
+For model-specific guidance, see `claude-considerations.md` (Anthropic Claude) and `codex-considerations.md` (OpenAI Codex).
 
-**1. Investigate before answering** — from [Minimizing hallucinations in agentic coding](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#minimizing-hallucinations-in-agentic-coding):
-
-> "Claude's latest models are less prone to hallucinations and give more accurate, grounded, intelligent answers based on the code."
-
-When the prompt involves an existing codebase, documents, or data, add this constraint:
-
-```xml
-<constraints>
-- Never speculate about content you have not read. If a specific file or source is referenced,
-  read it before answering. Investigate first, then respond — give grounded, hallucination-free answers.
-</constraints>
-```
-
-**2. Ground responses in quotes** — from [Long context prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#long-context-prompting):
-
-> "For long document tasks, ask Claude to quote relevant parts of the documents first before carrying out its task. This helps Claude cut through the noise."
-
-When the prompt involves long documents, add this instruction:
-
-```
-Before answering, extract and quote the relevant passages from the provided documents.
-Then base your response on those quotes.
-```
-
-**3. Self-check before finalizing** — from [Leverage thinking & interleaved thinking capabilities](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#leverage-thinking--interleaved-thinking-capabilities):
-
-> "Ask Claude to self-check. Append something like 'Before you finish, verify your answer against [test criteria].' This catches errors reliably, especially for coding and math."
-
-When the prompt involves precise or verifiable outputs, add:
-
-```
-Before finalizing, verify your output against [specific criteria].
-```
+For techniques that prevent hallucinations and improve factual accuracy (investigate before answering, ground in quotes, self-check), see `grounding-techniques.md`.
 
 ---
 
@@ -367,22 +387,28 @@ Follow this procedure when the official guide is updated.
 1. **Fetch the latest version** of the source page:
    `https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices`
 
-2. **Check each component against its source section.** Use the [source mapping table](#source-mapping) to verify each component is still aligned. For each row:
+2. **Recompute the source fingerprint.** Compare against the `Source fingerprint` row in the maintenance table. The fingerprint is a short checklist of the named sections and key quotes the framework depends on. If any fingerprint item is missing or materially changed, the framework needs patching.
+
+3. **Check each component against its source section.** Use the [source mapping table](#source-mapping) to verify each component is still aligned. For each row:
    - Does the source section still exist at the linked anchor?
    - Has the key quote changed or been removed?
    - Are there new recommendations that should be reflected?
 
-3. **Check for new sections.** Scan the guide for sections not covered by any existing component. If a new principle is introduced, evaluate whether it warrants a new component or an update to an existing one.
+4. **Check for new sections.** Scan the guide for sections not covered by any existing component. If a new principle is introduced, evaluate whether it warrants a new component or an update to an existing one.
 
-4. **Check the Claude-specific considerations.** If the guide mentions a new model generation (e.g., Claude 5.x), update `references/claude-considerations.md` with the new guidance.
+5. **Check the Claude-specific considerations.** If the guide mentions a new model generation (e.g., Claude 5.x), update `references/claude-considerations.md` with the new guidance.
 
-5. **Update the maintenance table** at the top of this file with the new verification date and model generation.
+6. **Re-run the activation fixtures.** `tests/activation-fixtures.md` lists reference prompts with expected activation outcomes. Any edit to `SKILL.md` or this file must leave all fixtures producing the expected outcome.
 
-6. **Update SKILL.md** if any component was added, removed, or renamed — the component list in Step 0 and the dialogue priorities in Step 2 must match framework.md.
+7. **Update the maintenance table** at the top of this file with the new verification date, model generation, and recomputed fingerprint.
 
-7. **Update examples.md** if the scoring denominator changed (e.g., `/7` → `/8`) or if example final prompts need to reflect new template structure.
+8. **Update SKILL.md** if any component was added, removed, or renamed — the component list in Step 0, the tier mapping, and the dialogue priorities in Step 2 must match this file.
 
-8. **Update the version** in `plugin.json` (single source of truth) and add a new entry in `CHANGELOG.md`.
+9. **Update `component-rubrics.md`** if the definition of any component changed — the operational checklist has to reflect the new definition.
+
+10. **Update `examples-content.md` and `examples-code.md`** if the scoring denominator changed (e.g., `/7` → `/8`) or if example final prompts need to reflect new template structure.
+
+11. **Update the version** in `plugin.json` (single source of truth) and add a new entry in `CHANGELOG.md`.
 
 ### Important note
 

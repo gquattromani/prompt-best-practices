@@ -74,8 +74,8 @@ This skill follows the [Agent Skills](https://agentskills.io/) open standard. An
 
 The 7-component framework applies to every runtime; what varies is the structural format (Component 7) and a handful of runtime-specific constraints. Model-specific tuning notes:
 
-- `skill/references/claude-considerations.md` — Anthropic Claude (Opus 4.7 baseline). XML tags recommended.
-- `skill/references/codex-considerations.md` — OpenAI Codex (`gpt-5.4` baseline). Markdown headings or XML both work; no upfront plans; explicit parallelization.
+- `skill/references/claude-considerations.md` — Anthropic Claude (Opus 4.8 baseline; Fable 5 / Mythos 5 aware). XML tags recommended.
+- `skill/references/codex-considerations.md` — OpenAI Codex (`gpt-5.5` baseline). Markdown headings or XML both work; preamble cadence is model-version dependent; explicit parallelization.
 
 The framework is most thoroughly tested on Claude because its components map 1:1 onto Anthropic's published guide. Reports on other runtimes are welcome — see `tests/benchmark-protocol.md` to run a comparable evaluation.
 

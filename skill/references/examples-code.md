@@ -219,7 +219,7 @@ Success: The endpoint sends a reset email, the token expires after 15 minutes, a
 
 ## Example 4: Same Task, Codex Target
 
-This example shows how the final prompt changes when the target runtime is **OpenAI Codex** (e.g., `gpt-5.4`) instead of Claude. The 7 components stay the same; what changes is framing, a few Constraints, and the absence of Claude-specific patterns. See `codex-considerations.md` for the full rationale.
+This example shows how the final prompt changes when the target runtime is **OpenAI Codex** (e.g., `gpt-5.5`) instead of Claude. The 7 components stay the same; what changes is framing, a few Constraints, and the absence of Claude-specific patterns. See `codex-considerations.md` for the full rationale.
 
 ### User Prompt
 "Build me a CLI tool that watches a directory and runs the linter on changed files"

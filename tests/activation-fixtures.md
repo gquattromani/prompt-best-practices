@@ -69,8 +69,8 @@ These fixtures verify that Step 3 (Build Final Prompt) picks the right Structure
 
 | # | Context | Expected format in final prompt | Rationale |
 |---|---|---|---|
-| D1 | Target runtime: Claude (Opus 4.7, Claude Code) | XML tags | `framework.md` > Component 7 default; `claude-considerations.md` §6. |
-| D2 | Target runtime: Codex (`gpt-5.4`) | Markdown headings or XML, both acceptable | `codex-considerations.md` §7. |
+| D1 | Target runtime: Claude (Opus 4.8, Claude Code) | XML tags | `framework.md` > Component 7 default; `claude-considerations.md` §8. |
+| D2 | Target runtime: Codex (`gpt-5.5`) | Markdown headings or XML, both acceptable | `codex-considerations.md` §7. |
 | D3 | Target runtime not specified | XML tags (safe default) | `framework.md` > Component 7 > Runtime-specific defaults. |
 
 ## Known-limitation fixtures

@@ -1,6 +1,6 @@
 {
   "name": "prompt-best-practices",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's official prompting best practices. Tier-adaptive dialogue, deterministic component rubric, and activation-regression fixtures.",
   "author": {
     "name": "Giandemetrio Quattromani"

@@ -11,9 +11,9 @@ For the operational checklist that turns "is this component present?" into a det
 | Field | Value |
 |---|---|
 | Source | [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) |
-| Last verified | 2026-04-20 |
-| Verified against | Claude 4.7 (Opus), Claude 4.6 (Sonnet) |
-| Source fingerprint | Opus 4.7 section present; XML-tags section present; length-calibration guidance present. Recompute on update. |
+| Last verified | 2026-06-16 |
+| Verified against | Claude Opus 4.8 (default, `claude-opus-4-8`), Claude Sonnet 4.6. Newest siblings: Claude Fable 5 / Claude Mythos 5. |
+| Source fingerprint | Page restructured into three parts (model-specific guidance / techniques for all current models / migration). Model-specific guidance now lives on dedicated pages (`prompting-claude-opus-4-8`, `prompting-claude-fable-5`), no longer in-page anchors. General-principles anchors stable: `be-clear-and-direct`, `give-claude-a-role`, `long-context-prompting`, `use-examples-effectively`, `control-the-format-of-responses`, `add-context-to-improve-performance`, `structure-prompts-with-xml-tags`. New "Communication style and verbosity" subsection under Output and formatting (length calibration moved to the per-model pages). Recompute on update. |
 
 When the source page is updated, follow the [update procedure](#update-procedure) at the bottom of this file. The procedure includes a fingerprint diff so a contributor can tell at a glance whether the source page shifted meaningfully since the last verification.
 
@@ -396,7 +396,7 @@ Follow this procedure when the official guide is updated.
 
 4. **Check for new sections.** Scan the guide for sections not covered by any existing component. If a new principle is introduced, evaluate whether it warrants a new component or an update to an existing one.
 
-5. **Check the Claude-specific considerations.** If the guide mentions a new model generation (e.g., Claude 5.x), update `references/claude-considerations.md` with the new guidance.
+5. **Check the Claude-specific considerations.** Model-specific guidance now lives on dedicated `prompting-claude-<model>` pages (e.g., `prompting-claude-opus-4-8`, `prompting-claude-fable-5`), not in-page anchors. When a new flagship ships, update `references/claude-considerations.md` to track it (rename the section, refresh the numbered points, update the per-model page links).
 
 6. **Re-run the activation fixtures.** `tests/activation-fixtures.md` lists reference prompts with expected activation outcomes. Any edit to `SKILL.md` or this file must leave all fixtures producing the expected outcome.
 

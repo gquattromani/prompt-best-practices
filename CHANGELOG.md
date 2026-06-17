@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0]
+
+Guideline refresh after fetching the current Anthropic and OpenAI official guides (verified 2026-06-16). Anthropic restructured its documentation into per-model pages, the current Claude flagship is Opus 4.8 (with Fable 5 / Mythos 5 as newest siblings), and the current Codex flagship is `gpt-5.5`. The 7-component framework, its source-mapping anchors, and all key quotes were re-verified and remain valid — no component was added, removed, or renamed.
+
+### Changed
+
+- `skill/references/claude-considerations.md`: replaced `## Claude 4.7` with `## Claude Opus 4.8` and rewrote the numbered guidance against the new dedicated [Prompting Claude Opus 4.8](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-4-8) page (literal instruction following at low effort, response-length calibration, direct/opinionated tone, the full `low`→`max` effort ladder with `xhigh` as the coding/agentic default, adaptive thinking off by default, reasoning-over-tools bias, fewer subagents and better progress updates, over-engineering risk, code-review harness re-tuning, the persistent cream/serif/terracotta frontend house style, interactive-vs-autonomous token use, prefill deprecation). Added a "How the official guidance is organized" section explaining that model-specific guidance now lives on per-model pages, plus a pointer to the [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5) page (Fable 5 / Mythos 5). Rewrote the update procedure for the per-model-page structure.
+- `skill/references/codex-considerations.md`: updated the "Recommended models" table to `gpt-5.5` (new default — "start with `gpt-5.5`"), `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.3-codex-spark`, with `gpt-5.2` and `gpt-5.3-codex` noted as deprecated for ChatGPT sign-in. Point 1 (preambles) rewritten: upfront-plan/preamble suppression is now model-version dependent — `gpt-5.3-codex`+ encourage cadence-based progress updates (every 1-3 steps; floor every 6 steps / 10 tool calls), so "no upfront plans" is no longer a blanket rule. Refreshed the framework-mapping table (Role → *Autonomy and Persistence*, Output spec → *Presenting your work and final message*) and noted the new *Plan tool* / *Special user requests* / *Frontend tasks* Starter Prompt sections. Updated the "verified" date to 2026-06-16.
+- `skill/references/framework.md` > maintenance table: `Last verified` → 2026-06-16; `Verified against` → Claude Opus 4.8 (default) and Claude Sonnet 4.6, with Fable 5 / Mythos 5 noted as newest siblings; recomputed the source fingerprint to record the three-part page restructure, the move of model-specific guidance to dedicated pages, the stable general-principles anchors, and the new "Communication style and verbosity" subsection.
+- `skill/references/framework.md` > Update procedure step 5: now reflects that model-specific guidance lives on per-model `prompting-claude-<model>` pages rather than in-page anchors.
+- `README.md`: tuning-notes baselines updated to Opus 4.8 (Fable 5 / Mythos 5 aware) and `gpt-5.5`; the Codex line now says preamble cadence is model-version dependent instead of "no upfront plans".
+- `skill/references/examples-code.md`: Example 4 Codex target bumped from `gpt-5.4` to `gpt-5.5`.
+- `tests/activation-fixtures.md`: Fixture D1 Claude runtime → Opus 4.8 (and `claude-considerations.md` §6 → §8 for the XML-tags point), Fixture D2 Codex runtime → `gpt-5.5`.
+
+### Unchanged
+
+- 7-component framework (Task, Role, Context, Examples, Output specification, Constraints, Structure) and the `/7` scoring denominator — re-verified against the current Anthropic guide for Opus 4.8.
+- All source-mapping anchors (`be-clear-and-direct`, `give-claude-a-role`, `long-context-prompting`, `use-examples-effectively`, `control-the-format-of-responses`, `add-context-to-improve-performance`, `structure-prompts-with-xml-tags`) and the additional-mapping anchors (`overthinking-and-excessive-thoroughness`, `overeagerness`, `tool-usage`, `minimizing-hallucinations-in-agentic-coding`, `leverage-thinking--interleaved-thinking-capabilities`) — all still resolve on the restructured page.
+- `SKILL.md`, `component-rubrics.md`, `grounding-techniques.md`, `examples-content.md` — model-agnostic; no changes required.
+
 ## [0.2.0]
 
 ### Added

@@ -219,7 +219,7 @@ Success: The endpoint sends a reset email, the token expires after 15 minutes, a
 
 ## Example 4: Same Task, Codex Target
 
-This example shows how the final prompt changes when the target runtime is **OpenAI Codex** (e.g., `gpt-5.5`) instead of Claude. The 7 components stay the same; what changes is framing, a few Constraints, and the absence of Claude-specific patterns. See `codex-considerations.md` for the full rationale.
+This example shows how the final prompt changes when the target runtime is **OpenAI Codex** (`gpt-5.6-sol`) instead of Claude. The 7 components stay the same; what changes is framing, a few Constraints, and the lean-prompt calibration GPT-5.6 rewards (see `codex-considerations.md` > "outcome-first, leaner prompts" and `framework.md` > "Calibrating for frontier models").
 
 ### User Prompt
 "Build me a CLI tool that watches a directory and runs the linter on changed files"
@@ -252,16 +252,14 @@ runs eslint only on the changed files (not the whole project).
 <constraints>
 - Use chokidar for file watching and eslint's Node API (not the CLI): spawning a child process per change is too slow for the 200ms target.
 - Respect .gitignore: watching node_modules or build output wastes CPU and crashes on large trees.
-- When reading multiple package.json files in the monorepo, batch the reads in a single parallel tool call: sequential reads are unnecessarily slow.
-- Never revert or overwrite uncommitted changes in the working tree: investigate unfamiliar files before acting on them.
-- Do not emit a preamble or upfront plan before starting work — begin implementation immediately.
+- This request authorizes creating and editing files in the tool's own package and running its build/test scripts. Stop and ask before touching other packages, installing global dependencies, or running any destructive git command.
+- When reading the monorepo's package.json files, batch the reads in a single parallel tool call: sequential reads are unnecessarily slow.
 </constraints>
 ```
 
 ### What changed vs. the Claude-flavored template
 
-- **Output_spec references `apply_patch` format** — Codex expects edits in this form (see `codex-considerations.md` §3).
-- **A Constraint explicitly requests parallel tool calls** — Codex benefits from being told (see `codex-considerations.md` §2).
-- **A Constraint on dirty worktree** is added — Codex's strong autonomy bias makes this worth stating (see `codex-considerations.md` §5).
-- **A Constraint says "no preamble or upfront plan"** — aligned with the official Codex Starter Prompt guidance, opposite of some Claude patterns (see `codex-considerations.md` §1).
-- No `<examples>` block here — the existing codebase is the implicit reference; adding a synthetic example would dilute rather than anchor.
+- **Output_spec references `apply_patch` format** — Codex expects edits in this form (see `codex-considerations.md` > "apply_patch format is strict").
+- **One autonomy-and-approval boundary, stated once** — GPT-5.6 rewards a single "what this request authorizes" statement over per-action "ask first" nagging (see `codex-considerations.md` > "Autonomy and approval boundaries").
+- **A Constraint requests parallel/batched tool calls** — GPT-5.6's multi-agent and parallel tool use benefit from being told (see `codex-considerations.md` > "Tool use").
+- **Leaner overall** — no `<examples>` block (the codebase is the implicit reference) and only a one-line role. On GPT-5.6, dropping non-behavioral sections improved eval scores while cutting tokens; a synthetic example here would dilute, not anchor.

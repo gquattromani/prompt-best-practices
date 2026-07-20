@@ -69,9 +69,10 @@ These fixtures verify that Step 3 (Build Final Prompt) picks the right Structure
 
 | # | Context | Expected format in final prompt | Rationale |
 |---|---|---|---|
-| D1 | Target runtime: Claude (Opus 4.8, Claude Code) | XML tags | `framework.md` > Component 7 default; `claude-considerations.md` §8. |
-| D2 | Target runtime: Codex (`gpt-5.5`) | Markdown headings or XML, both acceptable | `codex-considerations.md` §7. |
+| D1 | Target runtime: Claude (Fable 5 / Mythos 5 flagship, Opus 4.8 fallback, Claude Code) | XML tags | `framework.md` > Component 7 default; `claude-considerations.md` § 15. |
+| D2 | Target runtime: Codex (`gpt-5.6-sol`) | Markdown headings or XML, both acceptable | `codex-considerations.md` > "Other Codex-specific behaviors" § 4. |
 | D3 | Target runtime not specified | XML tags (safe default) | `framework.md` > Component 7 > Runtime-specific defaults. |
+| D4 | Target runtime: Claude Fable 5 or GPT-5.6, prompt over-specified (padded examples, repeated rules) | Skill trims to the smallest sufficient prompt | `framework.md` > "Calibrating for frontier models"; leaner prompts win on both flagships. |
 
 ## Known-limitation fixtures
 

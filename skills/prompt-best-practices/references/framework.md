@@ -11,9 +11,9 @@ For the operational checklist that turns "is this component present?" into a det
 | Field | Value |
 |---|---|
 | Source | [Claude prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) |
-| Last verified | 2026-06-16 |
-| Verified against | Claude Opus 4.8 (default, `claude-opus-4-8`), Claude Sonnet 4.6. Newest siblings: Claude Fable 5 / Claude Mythos 5. |
-| Source fingerprint | Page restructured into three parts (model-specific guidance / techniques for all current models / migration). Model-specific guidance now lives on dedicated pages (`prompting-claude-opus-4-8`, `prompting-claude-fable-5`), no longer in-page anchors. General-principles anchors stable: `be-clear-and-direct`, `give-claude-a-role`, `long-context-prompting`, `use-examples-effectively`, `control-the-format-of-responses`, `add-context-to-improve-performance`, `structure-prompts-with-xml-tags`. New "Communication style and verbosity" subsection under Output and formatting (length calibration moved to the per-model pages). Recompute on update. |
+| Last verified | 2026-07-20 |
+| Verified against | Claude Fable 5 (`claude-fable-5`) and Claude Mythos 5 — current flagship reference; Claude Opus 4.8 (`claude-opus-4-8`) — recommended fallback target; Claude Sonnet 5. Cross-checked against OpenAI GPT-5.6 Sol guidance. |
+| Source fingerprint | Page organized in three parts (model-specific guidance / techniques for all current models / migration). Model-specific guidance lives on dedicated per-model pages (`prompting-claude-fable-5`, `prompting-claude-sonnet-5`, `prompting-claude-opus-4-8`), not in-page anchors. General-principles anchors stable: `be-clear-and-direct`, `give-claude-a-role`, `long-context-prompting`, `use-examples-effectively`, `control-the-format-of-responses`, `add-context-to-improve-performance`, `structure-prompts-with-xml-tags`. Fable 5 introduces a "refactor prompts and skills / do not over-prescribe" directive that both Anthropic and OpenAI (GPT-5.6 lean-prompt guidance) now share — captured in "Calibrating for frontier models" below. Recompute on update. |
 
 When the source page is updated, follow the [update procedure](#update-procedure) at the bottom of this file. The procedure includes a fingerprint diff so a contributor can tell at a glance whether the source page shifted meaningfully since the last verification.
 
@@ -56,6 +56,25 @@ The framework is **modular, not prescriptive**. "Modular" is operationalized thr
 - **Complex** — the task mentions multiple subsystems, compliance/security, external dependencies, or requires reading existing code or documents before writing.
 
 Prefer the lower tier when in doubt. A well-aimed 2-component prompt beats a padded 7-component one.
+
+---
+
+## Calibrating for frontier models
+
+The current flagships — Claude Fable 5 / Mythos 5 and OpenAI GPT-5.6 Sol — converge on the same directive, and it sharpens how this framework should be used.
+
+- **Claude Fable 5:** "Skills developed for prior models are often too prescriptive for Claude Fable 5 and can degrade output quality. Review and consider removing older instructions if default performance is better." (`claude-considerations.md` § 1)
+- **OpenAI GPT-5.6:** "Removing repeated instructions and examples and simplifying tool descriptions can improve task performance and token efficiency." Leaner system prompts scored ~10-15% higher while using 41-66% fewer tokens. (`codex-considerations.md` > "outcome-first, leaner prompts")
+
+The framework's job is to make the *intent* precise — a clear task, a real success criterion, motivated constraints, the right output shape — **not to maximize component count.** On these models:
+
+1. **A component earns its place only if it changes the output.** If the model would produce the same result without a section, drop the section. This is the "modular, not prescriptive" rule made literal.
+2. **Examples are the first thing to cut.** Frontier models need far fewer few-shot examples; include one only when it demonstrably steers format or edge-case handling that words cannot. Redundant examples now act as noise and cost.
+3. **State a rule once, with its reason.** Repetition and per-action nagging ("ask first", "don't forget to…") degrade rather than help. Component 6's motivation clause replaces enumeration.
+4. **Prefer a brief steering instruction over an enumeration.** "Lead with the outcome; keep it concise" outperforms a bulleted list of ten things to avoid.
+5. **Effort is a dial, not prompt text.** Depth of reasoning is controlled by the `effort` / `reasoning.effort` parameter, not by telling the model to "think hard" or "be thorough" in the prompt.
+
+This does not weaken the framework — a precise, well-structured prompt is exactly what "outcome-first" prompting means. It reframes success as *sufficiency*, not completeness. The skill's tier caps (`SKILL.md` > Step 2) already encode this: the goal of the dialogue is the smallest prompt that makes the intent unambiguous.
 
 ---
 
@@ -203,6 +222,8 @@ You are a senior backend engineer specializing in API design and security.
 - Make them **relevant** — mirror your actual use case closely.
 - Make them **diverse** — cover edge cases so the model doesn't pick up unintended patterns.
 - Wrap in `<example>` tags so the model distinguishes them from instructions.
+
+**Frontier-model note:** on Claude Fable 5 / Mythos 5 and OpenAI GPT-5.6, few-shot examples are the *first* component to reconsider. These models infer format and intent from a clear task, so a redundant example adds tokens and noise rather than accuracy. Include an example only when it demonstrably steers something words cannot (a subtle format, a specific edge case). See "Calibrating for frontier models" above.
 
 ---
 

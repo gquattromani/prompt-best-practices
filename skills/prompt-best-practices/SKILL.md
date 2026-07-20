@@ -104,10 +104,12 @@ Dialogue rules:
 ### Step 3 — Build Final Prompt
 
 Construct the final prompt using the template in `framework.md` > Final Prompt Template. Apply Component 7 (Structure) using the format appropriate for the target runtime:
-- **Claude** → XML tags (default, strongest)
-- **Codex / other** → Markdown headings or XML (both work; see `codex-considerations.md`)
+- **Claude** (Fable 5 / Mythos 5 flagship, Opus 4.8 fallback) → XML tags (default, strongest). See `claude-considerations.md`.
+- **Codex / OpenAI** (GPT-5.6 Sol flagship) → Markdown headings or XML (both work). See `codex-considerations.md`.
 
 Adapt the template: include only the sections the tier and dialogue produced. Quick-tier prompts with just `<task>` and `<output_spec>` are valid and preferred to padding.
+
+**Frontier-model calibration (Fable 5 / Mythos 5, GPT-5.6):** build the *smallest sufficient* prompt, not the most complete one. Both flagships explicitly reward leaner prompts and can degrade on over-prescription. A component earns its place only if it changes the output — examples are the first to cut, rules are stated once with their reason, and depth is set by the `effort` parameter rather than "think hard" text. See `framework.md` > "Calibrating for frontier models".
 
 Present the prompt, then ask for one-word confirmation before executing.
 
@@ -128,5 +130,5 @@ If the user asks to modify the generated prompt, adjust only the requested compo
 - **Partial answers**: incorporate what the user gives, suggest defaults for gaps, confirm in one sentence, move on.
 - **Components supplied upfront in a single message**: skip what is already there; ask only about what the tier still requires.
 - **Mixed intent (question + execution request)**: answer the question directly, then offer optimization only for the execution part.
-- **Target runtime is OpenAI Codex**: consult `references/codex-considerations.md` — no upfront plans, explicit parallelization, `apply_patch` format, phase-aware output. The 7 components map directly onto Codex's Starter Prompt sections.
+- **Target runtime is OpenAI Codex (GPT-5.6 family)**: consult `references/codex-considerations.md` — outcome-first / leaner prompts (remove repeated instructions and non-behavioral examples), `apply_patch` edit format, autonomy-and-approval boundaries stated once, `reasoning.effort` for depth, multi-agent / programmatic tool calling. The 7 components still apply, but through the lean-prompt lens.
 - **User invoked the skill by mistake**: Fast-Track Exit is the documented escape. Do not argue; run the original prompt.

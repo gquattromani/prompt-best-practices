@@ -2,7 +2,7 @@
 
 An AI agent skill that transforms unstructured prompts into high-quality structured prompts through a short interactive dialogue. Works with any AI agent that supports the [Agent Skills](https://agentskills.io/) open standard.
 
-**First-class support for both Anthropic Claude and OpenAI Codex.** The 7-component framework was built by studying the prompting guidelines published by the major LLM providers. The canonical reference is [Anthropic's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) — the most comprehensive publicly available guide on the subject — with each component mapped to a specific section of that documentation. The framework then maps 1:1 onto the [OpenAI Codex Starter Prompt sections](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide), and dedicated tuning notes for each runtime live in `skill/references/claude-considerations.md` and `skill/references/codex-considerations.md`. The underlying principles — clear tasks, structured context, concrete examples, well-motivated constraints — are shared across providers and improve output quality on any LLM.
+**First-class support for both Anthropic Claude and OpenAI Codex.** The 7-component framework was built by studying the prompting guidelines published by the major LLM providers. The canonical reference is [Anthropic's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) — the most comprehensive publicly available guide on the subject — with each component mapped to a specific section of that documentation. The framework then maps onto [OpenAI's GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6), and dedicated tuning notes for each runtime live in `skills/prompt-best-practices/references/claude-considerations.md` and `skills/prompt-best-practices/references/codex-considerations.md`. Baselines are current: Claude Fable 5 / Mythos 5 (with Opus 4.8 as the fallback target) and OpenAI GPT-5.6 Sol. Both flagships now reward *leaner* prompts — the framework's job is to make intent precise, not to maximize component count (see `framework.md` > "Calibrating for frontier models"). The underlying principles — clear tasks, structured context, well-motivated constraints — are shared across providers and improve output quality on any LLM.
 
 ## The Problem
 
@@ -64,9 +64,9 @@ The skill evaluates your prompt against 7 components, each grounded in a specifi
 | 6 | **Constraints** | Rules with motivation (why each exists) | [Add context to improve performance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#add-context-to-improve-performance) |
 | 7 | **Structure** | Tagged sections for unambiguous parsing | [Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags) |
 
-Components are classified as present / partial / missing using the rubric in `skill/references/component-rubrics.md`, so the diagnostic is reproducible across runs.
+Components are classified as present / partial / missing using the rubric in `skills/prompt-best-practices/references/component-rubrics.md`, so the diagnostic is reproducible across runs.
 
-The dialogue length is capped by task tier (`skill/references/framework.md` > Task Tiers): up to 2 questions for quick tasks, 3 for standard, 5 for complex. If you prefer to skip the dialogue entirely, reply `skip` or `go` to the first diagnostic message.
+The dialogue length is capped by task tier (`skills/prompt-best-practices/references/framework.md` > Task Tiers): up to 2 questions for quick tasks, 3 for standard, 5 for complex. If you prefer to skip the dialogue entirely, reply `skip` or `go` to the first diagnostic message.
 
 ## Compatible Platforms
 
@@ -74,10 +74,10 @@ This skill follows the [Agent Skills](https://agentskills.io/) open standard. An
 
 The 7-component framework applies to every runtime; what varies is the structural format (Component 7) and a handful of runtime-specific constraints. Model-specific tuning notes:
 
-- `skill/references/claude-considerations.md` — Anthropic Claude (Opus 4.8 baseline; Fable 5 / Mythos 5 aware). XML tags recommended.
-- `skill/references/codex-considerations.md` — OpenAI Codex (`gpt-5.5` baseline). Markdown headings or XML both work; preamble cadence is model-version dependent; explicit parallelization.
+- `skills/prompt-best-practices/references/claude-considerations.md` — Anthropic Claude (Fable 5 / Mythos 5 flagship; Opus 4.8 fallback target). XML tags recommended; effort is the primary dial; steer with brief instructions rather than enumeration.
+- `skills/prompt-best-practices/references/codex-considerations.md` — OpenAI Codex (GPT-5.6 Sol flagship; Terra / Luna siblings). Markdown headings or XML both work; outcome-first / leaner prompts; `apply_patch` edit format; autonomy-and-approval boundaries stated once.
 
-The framework is most thoroughly tested on Claude because its components map 1:1 onto Anthropic's published guide. Reports on other runtimes are welcome — see `tests/benchmark-protocol.md` to run a comparable evaluation.
+Both current flagships explicitly reward leaner prompts, so the framework aims for the *smallest sufficient* prompt rather than the most complete one. The framework is most thoroughly tested on Claude because its components map cleanly onto Anthropic's published guide. Reports on other runtimes are welcome — see `tests/benchmark-protocol.md` to run a comparable evaluation.
 
 ## Uninstall
 
@@ -111,9 +111,10 @@ Follow the uninstall procedure documented by your installer or agent. The skill 
 .
 ├── .claude-plugin/          Plugin manifest
 ├── assets/                  Media files
-├── skill/
-│   ├── SKILL.md             Skill entry point
-│   └── references/          Framework, rubrics, examples, model-specific guidance
+├── skills/
+│   └── prompt-best-practices/
+│       ├── SKILL.md         Skill entry point
+│       └── references/      Framework, rubrics, examples, model-specific guidance
 ├── tests/
 │   ├── activation-fixtures.md   Reference prompts with expected activation outcome
 │   └── benchmark-protocol.md    Protocol to measure framework effect size

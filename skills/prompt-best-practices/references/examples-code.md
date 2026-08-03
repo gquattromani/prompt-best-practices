@@ -4,7 +4,7 @@
 
 Load this file when the target prompt is a code or engineering task (feature implementation, API design, test suite, refactor, CLI tool). For content and communication tasks, see `examples-content.md`. The last example in this file shows how the final prompt adapts when the target runtime is OpenAI Codex instead of Claude.
 
-All examples follow the 7-component framework defined in `framework.md`.
+All examples follow the 7-component framework: `framework.md` for tiers and the assembly template, `component-definitions.md` for the component definitions.
 
 ---
 
@@ -214,6 +214,10 @@ Success: The endpoint sends a reset email, the token expires after 15 minutes, a
 - Read src/routes/auth/login.ts before writing any code: ground the implementation in actual project patterns, not assumptions.
 </constraints>
 ```
+
+### What this prompt deliberately omits (Claude Opus 5 target)
+
+The last Constraint is the *investigate-before-answering* technique — it tells the model what to **read**, and it stays. What is absent is a *verification* clause ("verify the implementation against the criteria before finishing"): on Claude Opus 5 that clause causes over-verification, and the documented fix is to remove it rather than soften it (`claude-opus-5.md` § 2, `grounding-techniques.md` technique 3). If the target were Claude Fable 5 on a long autonomous run, the opposite call applies — keep an explicit verifier step, ideally a fresh-context verifier subagent (`claude-fable-5.md` § 8). Same task, same framework, different model column.
 
 ---
 

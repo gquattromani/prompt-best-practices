@@ -4,7 +4,7 @@
 
 Load this file when the target prompt is a communication, writing, or analysis task (email, social post, report, analysis summary). For code and engineering tasks, see `examples-code.md`. For anti-patterns showing when the skill should *not* activate, see the section at the bottom of this file.
 
-All examples follow the 7-component framework defined in `framework.md`.
+All examples follow the 7-component framework: `framework.md` for tiers and the assembly template, `component-definitions.md` for the component definitions.
 
 ---
 

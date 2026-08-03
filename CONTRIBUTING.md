@@ -37,12 +37,25 @@ When in doubt, prefer depth over breadth. Making the existing components more re
 - Keep the body under **5000 tokens** (~3500 words)
 - Write for AI agents, not humans — be direct, unambiguous, actionable
 - Don't repeat what's in reference files — point to them instead
+- Always write reference paths with the `references/` prefix. A bare `framework.md` resolves against the agent's working directory and fails to open.
+- Every reference file must appear in the Reference Map table, and in its sibling table in `framework.md` > When to Use. Keep the two in sync — a file nobody is told to load is dead content.
 
 ### Reference files (references/)
-- One topic per file, max **4000 tokens** (~2700 words). The canonical reference (`framework.md`) sits near this ceiling by design; smaller topic files should stay well below it.
+- One topic per file, hard ceiling **4000 tokens** (~2700 words) — no exceptions, including the canonical files. A file over budget risks being truncated or skipped by the loading agent, which is indistinguishable from the guidance not existing. If a file grows past the ceiling, split it by topic rather than trimming substance.
 - Each file must be self-contained — agents load them independently
 - Use concrete examples, not abstract explanations
 - Include a `## When to Use` section at the top of every file — it tells an agent whether loading the file is worth the tokens
+- Cross-reference by section title (`` `framework.md` > "Calibrating for frontier models" ``), not by line number. When you move a section between files, update every inbound reference in the same commit.
+
+### Budget check
+
+Run this from the repository root before opening a PR:
+
+```sh
+wc -w skills/prompt-best-practices/SKILL.md skills/prompt-best-practices/references/*.md
+```
+
+`SKILL.md` must stay ≤ 3500 words and every reference file ≤ 2700 words. This is fixture F1 in `tests/activation-fixtures.md`; F2 and F3 in the same set check the `## When to Use` header and the resolvability of every path named in `SKILL.md`.
 
 ## Pull Request Process
 
@@ -50,7 +63,7 @@ When in doubt, prefer depth over breadth. Making the existing components more re
 2. Create a descriptive branch name
 3. Make your changes
 4. Test with at least one AI agent (Claude Code, Codex, Cursor, etc.)
-5. **Run the activation fixtures** in `tests/activation-fixtures.md` — any change to `SKILL.md`, `framework.md`, or `component-rubrics.md` must leave every fixture producing its expected outcome.
+5. **Run the activation fixtures** in `tests/activation-fixtures.md` — any change to `SKILL.md`, `framework.md`, `component-definitions.md`, or `component-rubrics.md` must leave every fixture producing its expected outcome. Fixture set F (loadability) is three shell commands; run it on any change that adds, splits, renames, or grows a file.
 6. If the change is likely to affect output quality, run `tests/benchmark-protocol.md` and include the results file in your PR.
 7. Submit a PR describing what changed and why
 

@@ -2,7 +2,7 @@
 
 An AI agent skill that transforms unstructured prompts into high-quality structured prompts through a short interactive dialogue. Works with any AI agent that supports the [Agent Skills](https://agentskills.io/) open standard.
 
-**First-class support for both Anthropic Claude and OpenAI Codex.** The 7-component framework was built by studying the prompting guidelines published by the major LLM providers. The canonical reference is [Anthropic's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) — the most comprehensive publicly available guide on the subject — with each component mapped to a specific section of that documentation. The framework then maps onto [OpenAI's GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6), and dedicated tuning notes for each runtime live in `skills/prompt-best-practices/references/claude-considerations.md` and `skills/prompt-best-practices/references/codex-considerations.md`. Baselines are current: Claude Fable 5 / Mythos 5 (with Opus 4.8 as the fallback target) and OpenAI GPT-5.6 Sol. Both flagships now reward *leaner* prompts — the framework's job is to make intent precise, not to maximize component count (see `framework.md` > "Calibrating for frontier models"). The underlying principles — clear tasks, structured context, well-motivated constraints — are shared across providers and improve output quality on any LLM.
+**First-class support for both Anthropic Claude and OpenAI Codex.** The 7-component framework was built by studying the prompting guidelines published by the major LLM providers. The canonical reference is [Anthropic's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) — the most comprehensive publicly available guide on the subject — with each component mapped to a specific section of that documentation. The framework then maps onto [OpenAI's GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6), and dedicated tuning notes for each runtime live under `skills/prompt-best-practices/references/`. Baselines are current (verified 2026-08-03): **Claude Opus 5** as the default target, Claude Fable 5 / Mythos 5 as the highest-capability tier, Claude Opus 4.8 as the refusal-fallback target, and OpenAI GPT-5.6 Sol. All current frontier models reward *leaner* prompts — the framework's job is to make intent precise, not to maximize component count (see `framework.md` > "Calibrating for frontier models"). Per-model guidance is **not additive**: an instruction that helps one model can measurably hurt another (a self-check clause is recommended on Fable 5 long runs and must be *removed* on Opus 5), so the Claude notes ship with an explicit divergence table. The underlying principles — clear tasks, structured context, well-motivated constraints — are shared across providers and improve output quality on any LLM.
 
 ## The Problem
 
@@ -74,10 +74,12 @@ This skill follows the [Agent Skills](https://agentskills.io/) open standard. An
 
 The 7-component framework applies to every runtime; what varies is the structural format (Component 7) and a handful of runtime-specific constraints. Model-specific tuning notes:
 
-- `skills/prompt-best-practices/references/claude-considerations.md` — Anthropic Claude (Fable 5 / Mythos 5 flagship; Opus 4.8 fallback target). XML tags recommended; effort is the primary dial; steer with brief instructions rather than enumeration.
+- `skills/prompt-best-practices/references/claude-considerations.md` — Anthropic Claude **router**: which per-model file to load, the behaviors shared across the family (XML tags, no prefill, effort instead of thinking budgets), and the per-model divergence table.
+- `skills/prompt-best-practices/references/claude-opus-5.md` — Claude Opus 5, the default target. Prompt explicitly for conciseness (`effort` does not shorten visible output); delete verification and self-check clauses; constrain scope; cap subagent delegation; keep thinking on.
+- `skills/prompt-best-practices/references/claude-fable-5.md` — Claude Fable 5 / Mythos 5, the highest-capability tier. Refactor rather than over-prescribe; effort is the primary dial; steer with brief instructions; ground progress claims on long runs.
 - `skills/prompt-best-practices/references/codex-considerations.md` — OpenAI Codex (GPT-5.6 Sol flagship; Terra / Luna siblings). Markdown headings or XML both work; outcome-first / leaner prompts; `apply_patch` edit format; autonomy-and-approval boundaries stated once.
 
-Both current flagships explicitly reward leaner prompts, so the framework aims for the *smallest sufficient* prompt rather than the most complete one. The framework is most thoroughly tested on Claude because its components map cleanly onto Anthropic's published guide. Reports on other runtimes are welcome — see `tests/benchmark-protocol.md` to run a comparable evaluation.
+All current frontier models explicitly reward leaner prompts, so the framework aims for the *smallest sufficient* prompt rather than the most complete one — but they disagree on which sections to drop, which is what the divergence table is for. The framework is most thoroughly tested on Claude because its components map cleanly onto Anthropic's published guide. Reports on other runtimes are welcome — see `tests/benchmark-protocol.md` to run a comparable evaluation.
 
 ## Uninstall
 
@@ -114,7 +116,8 @@ Follow the uninstall procedure documented by your installer or agent. The skill 
 ├── skills/
 │   └── prompt-best-practices/
 │       ├── SKILL.md         Skill entry point
-│       └── references/      Framework, rubrics, examples, model-specific guidance
+│       └── references/      Framework entry point, component definitions, rubrics,
+│                            examples, model-specific guidance, maintenance record
 ├── tests/
 │   ├── activation-fixtures.md   Reference prompts with expected activation outcome
 │   └── benchmark-protocol.md    Protocol to measure framework effect size

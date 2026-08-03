@@ -43,7 +43,7 @@ In OpenAI's internal coding-agent tests, leaner system prompts improved evaluati
 - One clear statement per instruction.
 - Only task-relevant tools.
 
-For the 7-component framework this means: **Task** (with a real success criterion), **Output specification**, and **Constraints** (with motivation) carry almost all the weight on GPT-5.6. **Examples** should be included only when a single example changes the output — otherwise drop them. This is the same direction Claude Fable 5 took (see `claude-considerations.md` § 1); `framework.md` > "Calibrating for frontier models" is the shared statement of the principle.
+For the 7-component framework this means: **Task** (with a real success criterion), **Output specification**, and **Constraints** (with motivation) carry almost all the weight on GPT-5.6. **Examples** should be included only when a single example changes the output — otherwise drop them. This is the same direction the current Claude models took — Fable 5 with its "do not over-prescribe" directive (`claude-fable-5.md` > headline) and Opus 5 with the removal of verification scaffolding (`claude-opus-5.md` § 2). `framework.md` > "Calibrating for frontier models" is the shared statement of the principle.
 
 ## reasoning.effort
 
@@ -89,7 +89,7 @@ The 7-component framework applies to Codex, but apply it through the lean-prompt
 1. **Dirty git worktree handling.** Codex may encounter uncommitted changes. The guidance is emphatic: never revert changes you did not make and never use destructive commands (`git reset --hard`, `git checkout --`) unless explicitly requested; if unexpected changes appear, stop and ask. State this as a Constraint when the task touches a working tree.
 2. **Persisted reasoning and Pro mode.** `reasoning.context` reuses reasoning across turns for multi-turn quality; `reasoning.mode: "pro"` spends more model effort for reliability on hard tasks (single final answer, independent from `reasoning.effort`). Neither needs prompt changes, but they affect how much scaffolding a prompt needs — less, generally.
 3. **Explicit prompt caching.** Mark reusable prefixes to cache them (cache writes cost 1.25x; track `cached_tokens` / `cache_write_tokens`). Relevant when a structured prompt template is reused across many calls.
-4. **Structure format: Markdown headings or XML both work.** Unlike Claude, Codex has no strong preference. Its own final output is plain text with optional headers, `-` bullets, and backticks for code/paths — no deep nesting. Markdown headings (`## Task`, `## Output`) are often more natural in mixed human/agent prompts. See `framework.md` > Component 7.
+4. **Structure format: Markdown headings or XML both work.** Unlike Claude, Codex has no strong preference. Its own final output is plain text with optional headers, `-` bullets, and backticks for code/paths — no deep nesting. Markdown headings (`## Task`, `## Output`) are often more natural in mixed human/agent prompts. See `component-definitions.md` > Component 7.
 5. **Safety classifiers.** Real-time cyber- and biology-misuse classifiers may block or pause generation mid-stream on dual-use content. Send a stable, privacy-preserving `safety_identifier` for individual end-user applications.
 
 ## Update procedure

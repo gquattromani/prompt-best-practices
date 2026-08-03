@@ -5,6 +5,84 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0]
+
+Loadability pass on the skill's own structure. **No prompting guidance changed in this release** — the Claude Opus 5 baselines shipped in 0.5.0 are untouched, and no component, tier, dialogue cap, or activation rule was modified. What changed is whether an agent actually reads the guidance, on the principle that content which is present but never loaded is indistinguishable from content that does not exist.
+
+`framework.md` had grown to roughly 7400 tokens — nearly double the 4000-token reference-file ceiling declared in `CONTRIBUTING.md` — putting it at risk of being truncated or silently skipped by the loading agent. Three further failure modes surfaced alongside it: nine reference paths in `SKILL.md` were written without the `references/` prefix, so they resolve against the agent's working directory rather than the skill folder and open nothing; no file stated which reference to load when; and nothing would have caught any of it, because the budget lived in a prose guideline that also explicitly excused the file that broke it.
+
+### Added
+
+- `skills/prompt-best-practices/references/component-definitions.md`: the formal definitions of components 1-7 (source quote, format, what to check for, present/missing criteria, frontier-model notes), split out of `framework.md`. Pairs with `component-rubrics.md`: definitions say what a component *is*, rubrics say how to *count* it.
+- `skills/prompt-best-practices/references/maintenance.md`: the verification record (source fingerprint, models verified, date), the additional source mapping, and the update procedure — split out of `framework.md` and marked contributor-only, so ~900 words of release plumbing no longer load on the runtime path. Its new step 11 makes the file-budget check part of every update.
+- `skills/prompt-best-practices/SKILL.md` > **Reference Map**: a load-when table covering every reference file, a note that `maintenance.md` is contributor-only, an instruction to read a file rather than answer from memory of it, and an explicit fallback — if a reference cannot be read, complete the workflow with `SKILL.md` alone and say so in one line, rather than declining or skipping the diagnosis.
+- `skills/prompt-best-practices/references/framework.md` > **"The 7 components at a glance"**: a one-line-per-component table, so Step 0 and Step 1 can run without loading a second file. The same file now carries a sibling copy of the Reference Map for agents that enter through it rather than through `SKILL.md`.
+- `tests/activation-fixtures.md` > **fixture set F (loadability)**: F1 token budgets, F2 the `## When to Use` header on every reference file, F3 that every `references/…` path named in `SKILL.md` resolves — three copy-pasteable shell commands, all three verified green on this release — plus F4, the behavioral check that a missing reference degrades gracefully instead of aborting the workflow.
+- `CONTRIBUTING.md` > **Budget check**: the `wc -w` command with the per-file limits, cross-referenced to fixture set F.
+- `skills/prompt-best-practices/references/component-definitions.md`: frontier-model note on Component 6 — on Opus 5 scope and delegation limits earn their place, while verification clauses must be removed rather than softened.
+
+### Changed
+
+- `skills/prompt-best-practices/references/framework.md`: **split into three files** to bring it back inside the reference budget. It keeps the task tiers, the source-mapping table, the frontier-model calibration, the final prompt template and the adaptation guidelines; the component definitions moved to `component-definitions.md` and the maintenance material to `maintenance.md`. Measured:
+
+  | File | Before | After |
+  |---|---|---|
+  | `framework.md` | ~7400 tokens | ~3270 tokens |
+  | `component-definitions.md` | — | ~3530 tokens |
+  | `maintenance.md` | — | ~1920 tokens |
+
+  Every reference file now fits the 4000-token ceiling and can be loaded in full; `SKILL.md` sits at ~2900 tokens against its 5000-token limit.
+- `skills/prompt-best-practices/SKILL.md`: every reference path now carries the `references/` prefix, making nine previously ambiguous pointers resolvable.
+- Cross-references repointed after the split: `component-rubrics.md` (5 occurrences), `claude-considerations.md`, `codex-considerations.md`, `examples-code.md`, `examples-content.md`. References to `framework.md` > "Calibrating for frontier models", Task Tiers, Source mapping, and Final Prompt Template still resolve and were left alone; every `X.md` mentioned anywhere in the repo was verified to exist and every `file.md > "Section"` reference to point at a section that is actually there.
+- `CONTRIBUTING.md`: the reference-file budget is now a hard ceiling with no canonical-file exemption — the previous wording excused `framework.md` for "sitting near it by design", which is how it drifted to ~7400 tokens. Added the `references/`-prefix rule, the Reference-Map completeness rule (both copies kept in sync), the section-title cross-reference rule, and `component-definitions.md` to the fixture-run trigger list.
+- `AGENTS.md`: `component-definitions.md` and `maintenance.md` added to the reference list, `framework.md` marked as the entry point, `maintenance.md` marked contributor-only, the per-file budget stated, and `SKILL.md` > Reference Map named as the authoritative load-when table.
+- `tests/activation-fixtures.md`: the Component 7 references in D1 and D3 repointed to `component-definitions.md`; the fixture-trigger line in the Purpose section extended to `component-definitions.md` and `component-rubrics.md`; L1 now spans A1–F4.
+- `tests/benchmark-protocol.md`: a non-trivial change to `component-definitions.md` now also warrants a fresh benchmark run, alongside `framework.md`.
+- `NOTICE.md`: attribution extended to the two files created by the split.
+- `README.md`: the repository-structure tree names what `references/` actually contains.
+- `.claude-plugin/plugin.json`: version `0.5.0` → `0.6.0`.
+
+### Unchanged
+
+- All prompting guidance. The 7 components, their definitions and quotes, the tier thresholds, the dialogue caps, the activation rules, the Fast-Track Exit, the rubric marks, the model-gated self-check, the divergence table, and every worked example are byte-for-byte the 0.5.0 content — the split moved text between files without rewriting it.
+- Model baselines and verification date: Claude Opus 5 as the default target, Fable 5 / Mythos 5 as the highest-capability tier, Opus 4.8 as the refusal fallback, GPT-5.6 Sol on the OpenAI side. Still as verified on 2026-08-03; no source page was re-fetched for this release.
+
+## [0.5.0]
+
+Standards refresh for the release of **Claude Opus 5**, plus a restructure of the Claude reference files. Verified 2026-08-03 against the official guides: the new per-model [Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5) page, the re-fetched [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5) page, and the main [prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) page. Claude Opus 5 is now the **default target** (Claude Fable 5 / Mythos 5 remains the highest-capability tier; Claude Opus 4.8 the refusal-fallback target). The 7-component framework, its source-mapping anchors, and all key quotes were re-verified and remain valid — no component was added, removed, or renamed.
+
+The headline finding is that per-model guidance is **not additive**: Opus 5 inverts two instructions that prior guidance recommended. Verification / self-check clauses must be *removed* (they cause over-verification), and subagent delegation must be *capped* rather than encouraged. The framework now carries an explicit divergence table so the skill cannot flatten the two model columns into one Claude-wide default.
+
+### Added
+
+- `skills/prompt-best-practices/references/claude-opus-5.md`: new per-model file for Claude Opus 5 — eight tuning points (prompt for conciseness because `effort` does not shorten visible output; **delete** verification instructions rather than rewriting them; constrain task scope; cap subagent delegation; limit correction narration; describe narration cadence; calibrate written-deliverable length; keep thinking on), the effort posture (`high` default, `low`/`medium` as the primary cost lever, `xhigh` for demanding coding/agentic work), task-type notes (long-horizon spec-up-front, code review, vision-with-tools, office documents, long context), refusal handling, and a table of how the 7 components shift.
+- `skills/prompt-best-practices/references/claude-fable-5.md`: the Fable 5 / Mythos 5 guidance extracted into its own file and re-verified against the current page, with the newly documented items added (checkpoint instruction, early-stopping and context-budget reminders, send-to-user tool, explicit long-run self-verification).
+- `skills/prompt-best-practices/references/claude-considerations.md` > **"Pick the model before you tune"**: divergence table covering self-check, subagent delegation, response length, correction narration, thinking config, effort posture, and refusal fallback. Names the two most expensive migration mistakes explicitly.
+- `tests/activation-fixtures.md` > **fixture set E (model-gated content)**: E1 (Opus 5 → verification clause removed, not reworded), E2 (Fable 5 long run → verifier instruction kept), E3 (Opus 5 → explicit length line even at quick tier), E4 (Opus 5 → delegation cap, not a delegation nudge). E1 and E2 must not resolve the same way — that is the regression this set protects.
+- `skills/prompt-best-practices/references/framework.md` > "Calibrating for frontier models": two new points — **some legacy instructions are a delete, not a rewrite**, and **leaner is shared but the specifics are not** (guidance inverts between generations).
+- `skills/prompt-best-practices/references/examples-code.md`: "What this prompt deliberately omits (Claude Opus 5 target)" note on Example 3, contrasting the investigate-before-answering constraint (kept) with a verification clause (dropped on Opus 5, kept on Fable 5 long runs).
+
+### Changed
+
+- `skills/prompt-best-practices/references/claude-considerations.md`: converted from a single flat model file into a **router** — a routing table (Opus 5 / Fable 5 / Sonnet 5 / Opus 4.8 and earlier), the refreshed "How the official guidance is organized" block now listing four per-model pages, the divergence table, six family-wide behaviors (XML tags, no prefill, effort instead of thinking budgets, motivation over bare rules, no reasoning reproduction, literal instruction following), a short Sonnet 5 section, a demoted Opus 4.8 section, and a rewritten update procedure. This keeps every Claude file well inside the 4000-token reference budget in `CONTRIBUTING.md` and mirrors Anthropic's own per-model page layout.
+- `skills/prompt-best-practices/references/grounding-techniques.md`: technique 3 (self-check) is now **model-gated** — quotes the official Opus 5 exception verbatim, states that removal (not rewording) is the documented fix, and adds a per-target table. Techniques 1 and 2 remain model-agnostic.
+- `skills/prompt-best-practices/references/framework.md`: maintenance table (`Last verified` → 2026-08-03; `Verified against` → Opus 5 default target, Fable 5 / Mythos 5 top tier, Sonnet 5, Opus 4.8 fallback) and recomputed source fingerprint, which now records four per-model pages, the two general-technique sections carrying an explicit Opus 5 exception (`leverage-thinking…`, `communication-style-and-verbosity`), and a quote drift on `use-examples-effectively` ("dramatically" dropped). Calibration point 5 split depth from length (`effort` is a dial for depth, not verbosity). Frontier-model notes added to Component 5 (Output specification gained weight on Opus 5) and extended on Component 4. Update-procedure step 5 and the additional-source-mapping line rewritten for the new file layout.
+- `skills/prompt-best-practices/SKILL.md`: reference pointers updated to the router-plus-per-model layout; Step 2 priority 4 now skips the self-check constraint on Opus 5; Step 3 runtime hints updated (Opus 5 default target, Fable 5 / Mythos 5 top tier, Opus 4.8 previous generation) and given **two model-gated checks** before the prompt is presented; new "Target runtime is Claude Opus 5" edge case.
+- `tests/activation-fixtures.md`: D1 runtime → Claude Opus 5 default target (reference updated to the family-wide behaviors section); D4 extended to Opus 5; L1 now spans A1–E4.
+- `README.md`: baselines updated to Claude Opus 5 as the default target with the verification date, the non-additive-guidance warning added to the intro, and the model-specific tuning-notes list expanded to the three Claude files.
+- `AGENTS.md`: reference-file list updated for the new layout, with the self-check gating noted on `grounding-techniques.md`.
+- `skills/prompt-best-practices/references/codex-considerations.md`: the cross-reference to the shared lean-prompt principle now points at both Claude model files instead of the old section number.
+- `NOTICE.md`: attribution extended to the Prompting Claude Opus 5 page and the new per-model files, and it now states that sample instruction snippets are condensed adaptations of the published samples.
+- `.claude-plugin/plugin.json`: version `0.4.0` → `0.5.0`.
+
+### Unchanged
+
+- 7-component framework (Task, Role, Context, Examples, Output specification, Constraints, Structure) and the `/7` scoring denominator — re-verified against the current Anthropic guide, including the four per-model pages.
+- All source-mapping anchors (`be-clear-and-direct`, `give-claude-a-role`, `long-context-prompting`, `use-examples-effectively`, `control-the-format-of-responses`, `add-context-to-improve-performance`, `structure-prompts-with-xml-tags`) and the additional-mapping anchors — still resolve.
+- Task tiers, dialogue caps, activation rules, and the Fast-Track Exit.
+- `component-rubrics.md`, `examples-content.md`, `benchmark-protocol.md` — model-agnostic; no changes required.
+- OpenAI baselines (GPT-5.6 Sol / Terra / Luna, `reasoning.effort` ladder, `apply_patch`) — not re-verified in this release beyond the cross-reference fix; they remain as verified on 2026-07-20.
+
 ## [0.4.0]
 
 Standards refresh to the current flagship models and an installation-layout fix. Verified 2026-07-20 against the official guides: Anthropic's per-model [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5) page and OpenAI's [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6). The current Claude flagship reference is Claude Fable 5 / Mythos 5 (with Opus 4.8 as the recommended fallback target); the current OpenAI flagship is GPT-5.6 Sol (Terra / Luna siblings). The 7-component framework, its source-mapping anchors, and all key quotes were re-verified and remain valid — no component was added, removed, or renamed.

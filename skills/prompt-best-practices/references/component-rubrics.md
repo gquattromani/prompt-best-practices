@@ -4,7 +4,7 @@
 
 Load this file whenever you need to classify whether a component is `[OK]`, `[~~]`, or `[--]` in a prompt. The rubrics below turn subjective judgment into a concrete checklist, so two runs on the same prompt produce the same diagnostic.
 
-The checklist in this file is authoritative for the `[OK]/[~~]/[--]` marks shown in `SKILL.md` > Step 1. `framework.md` remains the canonical source for what each component *is*; this file defines *how to count it*.
+The checklist in this file is authoritative for the `[OK]/[~~]/[--]` marks shown in `SKILL.md` > Step 1. `component-definitions.md` remains the canonical source for what each component *is*; this file defines *how to count it*.
 
 ## Classification key
 
@@ -83,7 +83,7 @@ Always cite which checks passed and which failed when presenting the diagnostic 
 
 ## Rubric 5 — Output specification
 
-Sub-fields (from `framework.md` > Component 5):
+Sub-fields (from `component-definitions.md` > Component 5):
 
 - **O1. Format** — output type and length (e.g., "markdown, 200-400 words").
 - **O2. Tone** — described positively ("warm, direct, advisor-like"), not only via anti-patterns.
@@ -97,7 +97,7 @@ Sub-fields (from `framework.md` > Component 5):
 - `[~~]` — 1-2 of {O1, O2, O3, O4} pass.
 - `[--]` — none pass.
 
-**Notes:** O5 without O2 means the user defined what to avoid without defining what to produce. That is `[~~]` at best. See `framework.md` > Component 5 > "On the coexistence of Tone and Avoid".
+**Notes:** O5 without O2 means the user defined what to avoid without defining what to produce. That is `[~~]` at best. See `component-definitions.md` > Component 5 > "On the coexistence of Tone and Avoid".
 
 ---
 
@@ -131,7 +131,7 @@ Sub-fields (from `framework.md` > Component 5):
 - `[~~]` — S1 passes, S2 fails. (Delimiters used but inconsistent.)
 - `[--]` — S1 fails.
 
-**Notes:** Structure is format-agnostic (see `framework.md` > Component 7). XML is the Claude default but is not required for `[OK]` — consistent Markdown headings qualify.
+**Notes:** Structure is format-agnostic (see `component-definitions.md` > Component 7). XML is the Claude default but is not required for `[OK]` — consistent Markdown headings qualify.
 
 ---
 
@@ -155,4 +155,4 @@ Tier: quick (2-required). Already `[OK]` on Task; `[~~]` on Output spec. One qui
 
 ## Update procedure
 
-When a component definition changes in `framework.md`, update the corresponding rubric in this file before shipping. The rubric and the definition are tightly coupled — drift between them causes unreproducible diagnostics.
+When a component definition changes in `component-definitions.md`, update the corresponding rubric in this file before shipping. The rubric and the definition are tightly coupled — drift between them causes unreproducible diagnostics.

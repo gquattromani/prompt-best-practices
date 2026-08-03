@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Reference prompts with expected activation outcomes. A contributor modifying `SKILL.md` or `framework.md` must verify that every fixture still produces its expected outcome. This is the regression test for the skill's behavior.
+Reference prompts with expected activation outcomes. A contributor modifying `SKILL.md`, `framework.md`, `component-definitions.md`, or `component-rubrics.md` must verify that every fixture still produces its expected outcome. This is the regression test for the skill's behavior.
 
 These fixtures address the gap flagged in `SECURITY.md` > Scope > "Broken activation rules". Run them manually against the skill (or via an automated harness if one is added later); they are the contract the skill has to honor.
 
@@ -69,16 +69,38 @@ These fixtures verify that Step 3 (Build Final Prompt) picks the right Structure
 
 | # | Context | Expected format in final prompt | Rationale |
 |---|---|---|---|
-| D1 | Target runtime: Claude (Fable 5 / Mythos 5 flagship, Opus 4.8 fallback, Claude Code) | XML tags | `framework.md` > Component 7 default; `claude-considerations.md` § 15. |
+| D1 | Target runtime: Claude (Opus 5 default target, Claude Code) | XML tags | `component-definitions.md` > Component 7 default; `claude-considerations.md` > "Behaviors shared across the current family" § 1. |
 | D2 | Target runtime: Codex (`gpt-5.6-sol`) | Markdown headings or XML, both acceptable | `codex-considerations.md` > "Other Codex-specific behaviors" § 4. |
-| D3 | Target runtime not specified | XML tags (safe default) | `framework.md` > Component 7 > Runtime-specific defaults. |
-| D4 | Target runtime: Claude Fable 5 or GPT-5.6, prompt over-specified (padded examples, repeated rules) | Skill trims to the smallest sufficient prompt | `framework.md` > "Calibrating for frontier models"; leaner prompts win on both flagships. |
+| D3 | Target runtime not specified | XML tags (safe default) | `component-definitions.md` > Component 7 > Runtime-specific defaults. |
+| D4 | Target runtime: Claude Opus 5, Claude Fable 5, or GPT-5.6, prompt over-specified (padded examples, repeated rules) | Skill trims to the smallest sufficient prompt | `framework.md` > "Calibrating for frontier models"; leaner prompts win on all current frontier models. |
+
+## Fixture set E — Model-gated content
+
+These fixtures verify that Step 3 applies per-model guidance instead of a single Claude-wide default. They are the regression test for `claude-considerations.md` > "Pick the model before you tune": the failure mode is flattening the divergence, so E1 and E2 must not both resolve the same way.
+
+| # | Context | Expected behavior | Rationale |
+|---|---|---|---|
+| E1 | Target runtime: Claude Opus 5. User's original prompt contains "and double-check your answer before finalizing". | The verification clause is **removed** from the final prompt, with a one-line note that it was dropped. | `claude-opus-5.md` § 2; `grounding-techniques.md` technique 3 is model-gated. Rewording it is also a failure — the documented fix is removal. |
+| E2 | Target runtime: Claude Fable 5, long autonomous run. | The verifier instruction is **kept**, preferring a fresh-context verifier subagent over self-critique. | `claude-fable-5.md` § 8. Same clause, opposite call — the divergence must survive. |
+| E3 | Target runtime: Claude Opus 5, quick-tier prompt with no length or tone stated. | `<output_spec>` includes an explicit length/conciseness line even at quick tier. | `claude-opus-5.md` § 1: default responses run long and `effort` does not shorten visible output, so Component 5 is load-bearing here. |
+| E4 | Target runtime: Claude Opus 5, harness supports subagents. | Constraints include a delegation cap, not a delegation nudge. | `claude-opus-5.md` § 4. A "use subagents freely" line carried over from Opus 4.8 or Fable 5 guidance is a regression. |
+
+## Fixture set F — Loadability (mechanical checks)
+
+These fixtures protect the skill from a failure mode that has nothing to do with its logic: content that is present but never actually read. A reference file over budget can be truncated or skipped by the loading agent, and a cross-reference that points at a moved section silently degrades into no guidance at all. F1-F3 are deterministic shell checks — run them from the repository root before merging any change that adds, splits, renames, or grows a file.
+
+| # | Check | Command | Expected |
+|---|---|---|---|
+| F1 | Token budgets are respected | `wc -w skills/prompt-best-practices/SKILL.md skills/prompt-best-practices/references/*.md` | `SKILL.md` ≤ 3500 words (~5000 tokens); every reference file ≤ 2700 words (~4000 tokens). |
+| F2 | Every reference file declares its purpose | `rg -c '^## When to Use' skills/prompt-best-practices/references/*.md` | Every file reports `1`. A file with no count is missing the header an agent uses to decide whether loading it is worth the tokens. |
+| F3 | Every path named in `SKILL.md` resolves | `rg -o 'references/[a-z0-9-]+\.md' skills/prompt-best-practices/SKILL.md \| sort -u \| while read -r p; do [ -f "skills/prompt-best-practices/$p" ] \|\| echo "MISSING: $p"; done` | No output. Reference paths in `SKILL.md` must always carry the `references/` prefix, or an agent resolving them against the working directory will fail to open the file. |
+| F4 | A missing reference does not abort the workflow | Rename one reference file temporarily, then invoke the skill on a standard-tier prompt. | The skill completes Step 0 through Step 3 using `SKILL.md` alone and states in one line that a reference was unavailable. It must not decline, and it must not silently skip the diagnosis. |
 
 ## Known-limitation fixtures
 
 Fixtures where the skill's current heuristics are weak. Document them here so contributors know what not to silently break:
 
-- **L1**: Non-English prompts. The skill should respond in the same language, but tier classification and rubric matching may degrade. If you improve non-English detection, re-verify A1–D3 still pass.
+- **L1**: Non-English prompts. The skill should respond in the same language, but tier classification and rubric matching may degrade. If you improve non-English detection, re-verify A1–F4 still pass.
 - **L2**: Prompts with inline code blocks that contain XML. The rubric's `[OK]` detection on Component 7 (Structure) must not confuse *content XML* with *prompt-structuring XML*.
 
 ---

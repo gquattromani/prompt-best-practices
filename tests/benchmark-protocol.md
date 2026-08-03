@@ -84,7 +84,7 @@ Each run produces a report file at `tests/benchmark-results/<YYYY-MM-DD>-<target
 
 ## Running cost
 
-A full run costs roughly: 20 prompts × 2 conditions × target cost, plus 20 × judge cost. On current pricing, a full run against a mid-range target with a separate judge is on the order of $1-5. This is cheap enough that any non-trivial change to `framework.md` should include a fresh run.
+A full run costs roughly: 20 prompts × 2 conditions × target cost, plus 20 × judge cost. On current pricing, a full run against a mid-range target with a separate judge is on the order of $1-5. This is cheap enough that any non-trivial change to `framework.md` or `component-definitions.md` should include a fresh run.
 
 ## Automation
 

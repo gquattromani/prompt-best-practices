@@ -4,7 +4,7 @@
 
 Load this file when the target runtime is Claude Fable 5 (`claude-fable-5`) or Claude Mythos 5 (`claude-mythos-5`) — the highest-capability tier, for the hardest long-running or ambiguous work. For the default Opus-tier target, see `claude-opus-5.md`. For the cross-model router and family-wide behaviors, see `claude-considerations.md`.
 
-Derived from [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5) (verified 2026-08-03). Fable 5 "takes on problems that were previously too complex, long-running, or ambiguous for prior models," and is aimed at end-to-end work that takes a person hours, days, or weeks. Mythos 5 shares the same behavior and API surface.
+Derived from [Prompting Claude Fable 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5) (verified 2026-08-03) — every quotation below is taken verbatim from that page; the instruction snippets shown in backticks are condensed adaptations of its sample prompts, not quotations. These notes summarize and comment on that page; they are not a substitute for it. Fable 5 "takes on problems that were previously too complex, long-running, or ambiguous for prior models," and is aimed at end-to-end work that takes a person hours, days, or weeks. Mythos 5 shares the same behavior and API surface.
 
 ## The headline: refactor, do not over-prescribe
 
@@ -45,7 +45,7 @@ Concretely: include a framework component only when it changes the output. A tig
 
 8. **Make self-verification explicit on long runs.** "Separate, fresh-context verifier subagents tend to outperform self-critique." For long-running tasks: `"Establish a method for checking your own work as you build. Run it every [interval], verifying against the specification with subagents."` **Note the divergence:** this instruction is exactly what must be *removed* for Claude Opus 5, which over-verifies when told to verify (`claude-opus-5.md` § 2).
 
-9. **Give the reason, not only the request.** Fable 5 "performs better when it understands the intent behind a request": `"I'm working on [larger task] for [who]. They need [what the output enables]. With that in mind: [request]."` Same principle as Component 6 (constraints with motivation), applied to the task framing as a whole.
+9. **Give the reason, not only the request.** Fable 5 "tends to perform better when it understands the intent behind a request": `"I'm working on [larger task] for [who]. They need [what the output enables]. With that in mind: [request]."` Same principle as Component 6 (constraints with motivation), applied to the task framing as a whole.
 
 10. **Provide a memory surface.** Fable 5 "performs particularly well when it can record lessons from previous runs and reference them." A Markdown file is enough: one lesson per file, a one-line summary at the top, record corrections and confirmed approaches, delete notes that turn out wrong.
 

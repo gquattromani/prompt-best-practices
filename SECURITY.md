@@ -13,7 +13,7 @@ You can expect an initial response within 7 days. Valid reports will be credited
 
 ## Scope
 
-This skill is a collection of Markdown instructions for AI agents. It contains no executable code, no network calls, and no dependencies. The security surface is:
+This skill is a collection of Markdown instructions and manifests for AI agents. Nothing in it makes a network call and it has no dependencies; the only code that runs is a single `echo` per host in the optional activation hooks (`hooks/`), which prints a reminder and stores nothing. The security surface is:
 
 - **Prompt-injection patterns** in the dialogue examples that an attacker could reuse to bypass an agent's own guardrails
 - **Misleading guidance** that would lead an agent to recommend insecure code

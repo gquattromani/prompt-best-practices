@@ -1,6 +1,6 @@
 ---
 name: prompt-best-practices
-description: Optimize unstructured prompts into high-quality structured prompts. Triggers on execution requests (write, draft, generate, implement, fix, refactor, build) that lack clear success criteria or output shape. Skips micro-tasks (single-identifier renames, typo fixes, single-import additions) and conversational questions. Uses an adaptive 3-tier workflow — quick / standard / complex — so the dialogue length matches the task weight. Invoked via slash command it always assesses, but fast-tracks trivial prompts after one confirmation.
+description: Structure a prompt before executing it. Use this BEFORE acting on any request to write, draft, generate, implement, fix, refactor, build, create, design or analyze something, whenever that request does not state its success criteria, output format or constraints. Also use it when the user asks to improve, optimize, review or rewrite a prompt, or invokes /prompt-best-practices. The assessment is one message and the user can skip it with one word, so activating is cheap. Composes the final prompt for the runtime it will run on (Claude, GPT, Gemini, Grok, or a portable baseline). Not for micro-tasks (one rename, a typo, a single import) or for questions.
 ---
 
 # Prompt Best Practices Skill
@@ -20,10 +20,14 @@ Reference files live in `references/`, relative to this file. Each one is self-c
 | `references/framework.md` | **Start here.** Task tiers, the 7 components at a glance, frontier-model calibration, the final prompt template. Used by Step 0 and Step 3. |
 | `references/component-definitions.md` | A component's formal definition is in question — format, what to check for, what counts as present. |
 | `references/component-rubrics.md` | Assigning `[OK]` / `[~~]` / `[--]` in Step 0 Pass B. Authoritative for the marks. |
-| `references/claude-considerations.md` | The target runtime is Claude. It is the router: it names the per-model file to load and holds the divergence table. |
+| `references/runtime-detection.md` | **Before building any prompt (Step 3).** Maps the host you are running in to the model family that will consume the prompt, and holds the cross-vendor divergence table. The top-level router. |
+| `references/universal-baseline.md` | The vendor cannot be resolved — a multi-model host with no visible selection, a prompt reused across runtimes, an API or CI target. The portable intersection of all four vendors. |
+| `references/claude-considerations.md` | The target runtime is Claude. It is the second-level router for that branch: it names the per-model file to load and holds the per-model divergence table. |
 | `references/claude-opus-5.md` | The target is Claude Opus 5 — assume this when the user states no model. |
 | `references/claude-fable-5.md` | The target is Claude Fable 5 / Mythos 5. |
 | `references/codex-considerations.md` | The target is OpenAI Codex (GPT-5.6 family). |
+| `references/gemini-considerations.md` | The target is Google Gemini (Gemini 3.x) — Gemini CLI, Antigravity, Jules, or a picker set to Gemini. |
+| `references/grok-considerations.md` | The target is xAI Grok (`grok-4.6`) — Grok Build, or a picker set to Grok. |
 | `references/grounding-techniques.md` | The task is accuracy-critical (Step 2, priority 4). Technique 3 is model-gated. |
 | `references/examples-code.md` / `references/examples-content.md` | A worked end-to-end dialogue helps — code tasks / content tasks respectively. |
 
@@ -55,6 +59,18 @@ Reference files live in `references/`, relative to this file. Each one is self-c
 
 ### Fast-Track Exit (all activation modes)
 At Step 1 the user can type `skip`, `go`, `execute`, or `as-is` (any language equivalent) to exit the dialogue and run the original prompt unchanged. This is the documented escape; always offer it in the Step 1 message.
+
+## Runtime Routing
+
+The 7 components are the same everywhere. The *dialect* is not: structural format, whether examples earn their place, how verbosity and reasoning depth are controlled, and which clauses must be deleted rather than softened all depend on which model family consumes the prompt.
+
+Resolve the target before Step 3, in this order — `references/runtime-detection.md` is the authoritative map:
+
+1. **An explicit statement wins.** A model or vendor named anywhere in the conversation overrides the host: the prompt may be written in one agent and executed in another.
+2. **Otherwise infer from the host.** Single-vendor hosts resolve immediately — Claude Code → Anthropic, Codex → OpenAI, Gemini CLI / Antigravity / Jules → Google, Grok Build → xAI.
+3. **Otherwise use `references/universal-baseline.md`.** Multi-model hosts (GitHub Copilot, Cursor, Windsurf, Cline, Zed, Kiro, Qoder, OpenCode, Aider, Amp, Junie, Devin, pi, Swival, OpenClaw, CodeWhale) resolve to the baseline unless the selected model is already visible. The baseline is a correct answer, not a fallback.
+
+Routing is **not** a dialogue question and does not consume a tier-capped question. Never guess a vendor from a multi-model host — state the assumption in one line in Step 3 instead, phrased so the user can correct it without a round trip.
 
 ## Workflow
 
@@ -121,17 +137,23 @@ Dialogue rules:
 
 ### Step 3 — Build Final Prompt
 
-Construct the final prompt using the template in `references/framework.md` > Final Prompt Template. Apply Component 7 (Structure) using the format appropriate for the target runtime:
+Construct the final prompt using the template in `references/framework.md` > Final Prompt Template — or the Markdown template in `references/universal-baseline.md` when the vendor is unresolved. Apply Component 7 (Structure) and the vendor's own composition rules using the runtime resolved above:
 - **Claude** (Opus 5 default target; Fable 5 / Mythos 5 top tier; Opus 4.8 previous generation) → XML tags (default, strongest). Start at `references/claude-considerations.md`, then load the per-model file.
-- **Codex / OpenAI** (GPT-5.6 Sol flagship) → Markdown headings or XML (both work). See `references/codex-considerations.md`.
+- **Codex / OpenAI** (GPT-5.6 Sol flagship) → Markdown headings or XML (both work); drop repeated instructions and non-behavioral examples. See `references/codex-considerations.md`.
+- **Google Gemini** (Gemini 3.x) → Markdown headings or XML tags, consistently; data first and the instruction last with an anchor phrase; state length and tone explicitly because the default is terse; carry no sampling instruction. See `references/gemini-considerations.md`.
+- **xAI Grok** (`grok-4.6`) → keep Role and expand Constraints with edge cases (this vendor asks for a thorough prompt, not a lean one); enumerate context paths; describe tool use as native function calling, never as an XML envelope. See `references/grok-considerations.md`.
+- **Vendor unresolved** → the portable intersection: XML tags (the hidden model may be Claude and no other vendor penalizes them), context first, one example at most, explicit length, no vendor-specific parameter text. See `references/universal-baseline.md`.
 
 Adapt the template: include only the sections the tier and dialogue produced. Quick-tier prompts with just `<task>` and `<output_spec>` are valid and preferred to padding.
 
 **Frontier-model calibration (Opus 5, Fable 5 / Mythos 5, GPT-5.6):** build the *smallest sufficient* prompt, not the most complete one. All three explicitly reward leaner prompts and can degrade on over-prescription. A component earns its place only if it changes the output — examples are the first to cut, rules are stated once with their reason, and reasoning depth is set by the `effort` parameter rather than "think hard" text. Some legacy instructions are a *delete*, not a rewrite. See `references/framework.md` > "Calibrating for frontier models".
 
-**Two model-gated checks before presenting the prompt** (both from `references/claude-considerations.md` > "Pick the model before you tune"):
-- If the target is **Claude Opus 5**, remove any self-check / verification / "double-check your answer" clause — including one the user's original prompt carried over — and note the removal in one line. Response length must be stated in `<output_spec>`; `effort` will not shorten it.
-- If the target is **Claude Fable 5 / Mythos 5** and the task is a long autonomous run, the verifier instruction is the opposite call: keep it, preferring a fresh-context verifier subagent over self-critique.
+**Vendor-gated checks before presenting the prompt.** Each is a *delete, not a rewrite* case on its runtime, and each is wrong on at least one other runtime — the divergence table in `references/runtime-detection.md` is the full list:
+- **Claude Opus 5**: remove any self-check / verification / "double-check your answer" clause — including one the user's original prompt carried over — and note the removal in one line. Response length must be stated in `<output_spec>`; `effort` will not shorten it.
+- **Claude Fable 5 / Mythos 5**, long autonomous run: the opposite call — keep the verifier instruction, preferring a fresh-context verifier subagent over self-critique.
+- **Google Gemini 3.x**: remove temperature and other sampling instructions (the vendor recommends the defaults, and lowering temperature can cause looping) and remove chain-of-thought scaffolding; add the explicit length and tone line. A "think very hard before answering" nudge is legitimate here on heavy-reasoning tasks only — it is the one runtime that endorses it.
+- **xAI Grok**: do not trim Role or edge-case constraints to look lean, and remove any instruction asking for tool calls in an XML envelope.
+- **Vendor unresolved**: remove every item in `references/universal-baseline.md` > "What the baseline deliberately leaves out" — each one is correct on one vendor and wrong on another.
 
 Present the prompt, then ask for one-word confirmation before executing.
 
@@ -153,5 +175,8 @@ If the user asks to modify the generated prompt, adjust only the requested compo
 - **Components supplied upfront in a single message**: skip what is already there; ask only about what the tier still requires.
 - **Mixed intent (question + execution request)**: answer the question directly, then offer optimization only for the execution part.
 - **Target runtime is Claude Opus 5 (the default when the model is unstated)**: consult `references/claude-opus-5.md` — prompt explicitly for conciseness (`effort` does not shorten visible output), delete verification and self-check clauses instead of rewording them, constrain scope on narrow tasks, cap subagent delegation, and keep thinking on rather than disabling it. The 7 components still apply: Output specification and Constraints carry more weight, verification-style constraints are dropped.
+- **The host is multi-model and the selection is not visible** (GitHub Copilot, Cursor, Windsurf, Cline, Zed, Kiro, Qoder, OpenCode, Aider, Amp, Junie, Devin, pi, Swival, OpenClaw, CodeWhale): build to `references/universal-baseline.md` and say in one line which runtime the prompt assumes. Do not spend a tool call or a dialogue question discovering the model on a quick- or standard-tier task.
+- **Target runtime is Google Gemini (Gemini 3.x)**: consult `references/gemini-considerations.md` — Markdown headings or XML tags used consistently, data first with the instruction last and an anchor phrase, explicit length and tone because the default is terse, no sampling instruction, examples kept for format regulation rather than reasoning demonstration, grounding delegated to Search and code execution instead of a self-check clause.
+- **Target runtime is xAI Grok (`grok-4.6`, the model behind Grok Build)**: consult `references/grok-considerations.md` — the one runtime that asks for a *thorough* prompt: keep Role, spell out edge cases in Constraints, enumerate the context paths, and never request tool calls in an XML envelope.
 - **Target runtime is OpenAI Codex (GPT-5.6 family)**: consult `references/codex-considerations.md` — outcome-first / leaner prompts (remove repeated instructions and non-behavioral examples), `apply_patch` edit format, autonomy-and-approval boundaries stated once, `reasoning.effort` for depth, multi-agent / programmatic tool calling. The 7 components still apply, but through the lean-prompt lens.
 - **User invoked the skill by mistake**: Fast-Track Exit is the documented escape. Do not argue; run the original prompt.

@@ -1,0 +1,24 @@
+{
+  "name": "prompt-best-practices",
+  "description": "Structures underspecified prompts with a 7-component framework before the agent executes them.",
+  "owner": {
+    "name": "Giandemetrio Quattromani"
+  },
+  "plugins": [
+    {
+      "name": "prompt-best-practices",
+      "description": "Interactive prompt structuring: 7 components, 3 task tiers, smallest sufficient prompt.",
+      "source": "./",
+      "category": "productivity",
+      "tags": [
+        "prompt-engineering",
+        "prompt-optimization",
+        "agent-skills",
+        "structured-prompts"
+      ],
+      "commands": "commands/",
+      "skills": "skills/",
+      "hooks": "hooks/activation-reminder-copilot.json"
+    }
+  ]
+}

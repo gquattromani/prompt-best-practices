@@ -1,0 +1,36 @@
+{
+  "name": "prompt-best-practices",
+  "version": "0.9.0",
+  "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's published prompting guide. Tier-adaptive dialogue, deterministic component rubric, and activation-regression fixtures.",
+  "author": {
+    "name": "Giandemetrio Quattromani"
+  },
+  "homepage": "https://github.com/gquattromani/prompt-best-practices",
+  "repository": "https://github.com/gquattromani/prompt-best-practices",
+  "license": "MIT",
+  "keywords": [
+    "prompt-engineering",
+    "prompt-optimization",
+    "agent-skills",
+    "structured-prompts"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Prompt Best Practices",
+    "shortDescription": "Structure the prompt before executing it",
+    "longDescription": "Assess a request against 7 components (Task, Role, Context, Examples, Output specification, Constraints, Structure), size the dialogue to the task tier, then build the smallest sufficient prompt.",
+    "developerName": "Giandemetrio Quattromani",
+    "category": "Productivity",
+    "capabilities": [
+      "Instructions",
+      "Lifecycle hooks"
+    ],
+    "websiteURL": "https://github.com/gquattromani/prompt-best-practices",
+    "defaultPrompt": [
+      "Assess this prompt before running it.",
+      "Which of the 7 components is my prompt missing?",
+      "Rebuild this prompt for Claude Opus 5."
+    ]
+  },
+  "hooks": "./hooks/activation-reminder-claude-codex.json"
+}

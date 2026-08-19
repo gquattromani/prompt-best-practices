@@ -29,7 +29,7 @@ This is the biggest change in the GPT-5.6 family and it directly shapes how the 
 
 > "Removing repeated instructions and examples and simplifying tool descriptions can improve task performance and token efficiency."
 
-In OpenAI's internal coding-agent tests, leaner system prompts improved evaluation scores by **~10-15%** while cutting tokens by **41-66%** and cost by **33-67%**. The model infers underlying user goals better than prior generations, so verbose, instruction-heavy prompts now act as noise.
+In OpenAI's internal coding-agent tests, reported in the [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6), leaner system prompts improved evaluation scores by **~10-15%** while cutting tokens by **41-66%** and cost by **33-67%**. The model infers underlying user goals better than prior generations, so verbose, instruction-heavy prompts now act as noise.
 
 **What to remove** when building or migrating a prompt for GPT-5.6:
 - Instructions stated more than once.

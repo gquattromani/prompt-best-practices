@@ -19,3 +19,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Scope of this licence
+
+This licence covers the text and files authored for this project. It does not
+cover the third-party material reproduced here: short attributed quotations from
+vendor documentation, and material licensed under CC BY 4.0. That material
+remains the property of its respective owners, is used on the basis recorded in
+NOTICE.md, and must be redistributed under its own terms rather than under this
+licence.

@@ -4,7 +4,7 @@
 
 Load this file when the prompt involves accuracy-critical work: reading an existing codebase, quoting from documents, verifying outputs against constraints, or any task where hallucinations would cause real harm. The three techniques below can be added as Constraints (Component 6) or woven into the task instruction.
 
-**Techniques 1 and 2 are model-agnostic. Technique 3 is model-gated** — it must be omitted when the target is Claude Opus 5. Read technique 3 before adding a verification clause.
+**Techniques 1 and 2 are model-agnostic. Technique 3 is vendor- and model-gated** — it must be omitted when the target is Claude Opus 5, and on Google Gemini the vendor's own answer to accuracy is tool enablement rather than a verification clause. Read technique 3 and its table before adding one. `runtime-detection.md` resolves which runtime applies.
 
 ## Techniques
 
@@ -29,7 +29,7 @@ When the prompt involves an existing codebase, documents, or data, add this cons
 
 From [Long context prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#long-context-prompting):
 
-> "For long document tasks, ask Claude to quote relevant parts of the documents first before carrying out its task. This helps Claude cut through the noise."
+> "For long document tasks, ask Claude to quote relevant parts of the documents first before carrying out its task. This helps Claude focus on the relevant content and ignore the rest of the document."
 
 When the prompt involves long documents, add this instruction:
 
@@ -56,4 +56,7 @@ Before finalizing, verify your output against [specific criteria].
 |---|---|
 | Claude Opus 5 | **Omit.** Verification is default behavior; the instruction causes over-verification. |
 | Claude Fable 5 / Mythos 5 | Keep — and on long runs prefer a fresh-context verifier subagent over self-critique (`claude-fable-5.md` § 8). |
-| Claude Opus 4.8 and earlier, other runtimes | Keep as written. |
+| Claude Opus 4.8 and earlier | Keep as written. |
+| Google Gemini 3.x | Prefer the vendor's mechanism: Search grounding "should be enabled whenever the model may need to know obscure or recent facts" and code execution "whenever the model needs to perform any kind of arithmetic, counting, or calculation". Write the constraint around the tool ("answer only from the retrieved sources; if Search returns nothing relevant, say so") instead of a self-check clause. See `gemini-considerations.md` > Grounding. |
+| xAI Grok, other runtimes | Keep as written. On Grok, pair it with the explicit edge cases the vendor asks for (`grok-considerations.md`). |
+| Vendor unresolved | Keep techniques 1 and 2; omit technique 3 — it is required on some runtimes and harmful on others (`universal-baseline.md` > "What the baseline deliberately leaves out"). |

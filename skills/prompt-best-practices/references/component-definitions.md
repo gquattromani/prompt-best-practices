@@ -75,7 +75,7 @@ You are a senior backend engineer specializing in API design and security.
 ## Component 3: Context
 
 > Source: [Long context prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#long-context-prompting)
-> "Put your long documents and inputs near the top of your prompt, above your query, instructions, and examples. This can significantly improve performance across all models."
+> "Place your long documents and inputs near the top of your prompt, above your query, instructions, and examples. This improves performance across all models."
 > "Structure document content and metadata with XML tags."
 > "For long document tasks, ask Claude to quote relevant parts of the documents first before carrying out its task."
 
@@ -114,7 +114,7 @@ You are a senior backend engineer specializing in API design and security.
 
 > Source: [Use examples effectively](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#use-examples-effectively)
 > "Examples are one of the most reliable ways to steer Claude's output format, tone, and structure. A few well-crafted examples (known as few-shot or multishot prompting) improve accuracy and consistency."
-> "Include 3-5 examples for best results."
+> "Include 3–5 examples for best results."
 
 **What it is:** Concrete examples of desired output, wrapped in `<example>` tags.
 
@@ -228,7 +228,7 @@ Flag any potential rule conflict before proceeding.
 ## Component 7: Structure
 
 > Source: [Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags)
-> "XML tags help Claude parse complex prompts unambiguously, especially when your prompt mixes instructions, context, examples, and variable inputs. Wrapping each type of content in its own tag reduces misinterpretation."
+> "XML tags help Claude parse complex prompts unambiguously, especially when your prompt mixes instructions, context, examples, and variable inputs. Wrapping each type of content in its own tag (for example, `<instructions>`, `<context>`, `<input>`) reduces misinterpretation."
 
 **What it is:** The use of structured delimiters to wrap distinct sections of the prompt, giving each part a clear semantic label. Structure is *format-agnostic* — what matters is unambiguous separation, not which syntax provides it.
 
@@ -236,12 +236,16 @@ Flag any potential rule conflict before proceeding.
 
 | Format | When to prefer | Example |
 |---|---|---|
-| **XML tags** | Claude (default, strongest-tested) | `<task>...</task>` |
-| **Markdown headings** | Codex, models that train heavily on Markdown, human-edited prompts | `## Task\n...` |
+| **XML tags** | Claude (default, strongest-tested); also named as a valid option by Google for Gemini | `<task>...</task>` |
+| **Markdown headings** | Codex, Gemini, Grok, an unresolved vendor, models that train heavily on Markdown, human-edited prompts | `## Task\n...` |
 | **JSON** | Programmatic prompt assembly, strict schemas | `{"task": "...", "output_spec": {...}}` |
 | **Fenced blocks with labels** | Inline contexts, chat UIs that strip XML | ` ```task ... ``` ` |
 
 Pick one and use it consistently across the prompt. Mixing formats (XML for some sections, Markdown for others) defeats the purpose.
+
+**Structure is for sections, not for tool calls.** Wrapping prompt sections in XML is safe everywhere; asking the model to *emit* tool calls as XML is not — xAI warns it may hurt performance versus native function calling, and every current vendor exposes a structured tool API. See `grok-considerations.md` > "Tool calling: native, not XML".
+
+Which format applies to the runtime at hand is resolved in `runtime-detection.md`; `universal-baseline.md` carries the Markdown template used when the vendor is unknown.
 
 **What to check for:**
 - Are distinct sections of the prompt wrapped in descriptive delimiters?
@@ -252,10 +256,12 @@ Pick one and use it consistently across the prompt. Mixing formats (XML for some
 **Present if:** The prompt uses consistent structured delimiters to separate at least 2 distinct sections.
 **Missing if:** The prompt is a flat block of text with no structural markers.
 
-**Runtime-specific defaults:**
+**Runtime-specific defaults** (routing in `runtime-detection.md`):
 - Claude → XML tags (see `claude-considerations.md`). Parses unambiguously; strongest-tested.
 - Codex → XML or Markdown headings, both work well (see `codex-considerations.md`).
-- Unknown / mixed fleet → XML is the safest single choice.
+- Gemini → XML-style tags or Markdown headings, used consistently; Google names both (see `gemini-considerations.md`).
+- Grok → either, for sections; never an XML envelope for tool calls (see `grok-considerations.md`).
+- Unknown / mixed fleet / multi-model host → XML is the safest single choice, because a hidden model may be Claude and no other vendor penalizes XML sections (see `universal-baseline.md` > rule 2).
 
 **Best practices (from the guide):**
 - Use consistent, descriptive names across your prompts.

@@ -2,7 +2,7 @@
 
 ## When to Use
 
-Load this file when the target runtime is Anthropic Claude. It is the **router**: it tells you which model-specific file to load, records the behaviors that hold across the current family, and flags the places where per-model tuning actively conflicts. Load it before the model-specific file — it is short by design.
+Load this file when the target runtime is Anthropic Claude — normally reached from `runtime-detection.md`, which resolves the host to a vendor first. It is the **second-level router** for the Anthropic branch: it tells you which model-specific file to load, records the behaviors that hold across the current family, and flags the places where per-model tuning actively conflicts. Load it before the model-specific file — it is short by design.
 
 | Target | File | Role |
 |---|---|---|

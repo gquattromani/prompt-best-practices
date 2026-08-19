@@ -1,0 +1,4 @@
+{
+  "name": "prompt-best-practices",
+  "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's published prompting guide. Tier-adaptive dialogue, deterministic component rubric, and activation-regression fixtures."
+}

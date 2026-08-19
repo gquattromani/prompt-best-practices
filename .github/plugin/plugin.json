@@ -5,6 +5,7 @@
   "author": {
     "name": "Giandemetrio Quattromani"
   },
+  "homepage": "https://github.com/gquattromani/prompt-best-practices",
   "repository": "https://github.com/gquattromani/prompt-best-practices",
   "license": "MIT",
   "keywords": [
@@ -13,5 +14,7 @@
     "agent-skills",
     "structured-prompts"
   ],
-  "hooks": "./hooks/activation-reminder-claude-codex.json"
+  "commands": "commands/",
+  "skills": "skills/",
+  "hooks": "hooks/activation-reminder-copilot.json"
 }

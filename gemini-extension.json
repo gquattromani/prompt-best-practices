@@ -1,0 +1,6 @@
+{
+  "name": "prompt-best-practices",
+  "version": "0.9.0",
+  "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's published prompting guide.",
+  "contextFileName": "AGENTS.md"
+}

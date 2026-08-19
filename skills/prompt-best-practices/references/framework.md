@@ -10,10 +10,14 @@ It is deliberately small enough to load in full. Everything else lives in a sibl
 |---|---|---|
 | `component-definitions.md` | the formal definition, format, and check-list of a component (1-7) | runtime |
 | `component-rubrics.md` | to decide `[OK]` / `[~~]` / `[--]` for a component deterministically | runtime |
+| `runtime-detection.md` | to map the host you are running in to the model family that will consume the prompt, plus the cross-vendor divergence table | runtime |
+| `universal-baseline.md` | the vendor is unresolved — the portable intersection of all tracked vendors | runtime |
 | `claude-considerations.md` | the Claude router: which per-model file applies, family-wide behaviors, divergence table | runtime |
 | `claude-opus-5.md` | tuning for Claude Opus 5 — the default target when no model is stated | runtime |
 | `claude-fable-5.md` | tuning for Claude Fable 5 / Mythos 5 | runtime |
 | `codex-considerations.md` | tuning for OpenAI Codex (GPT-5.6 family) | runtime |
+| `gemini-considerations.md` | tuning for Google Gemini (Gemini 3.x) | runtime |
+| `grok-considerations.md` | tuning for xAI Grok (`grok-4.6`) | runtime |
 | `grounding-techniques.md` | accuracy techniques for accuracy-critical tasks (technique 3 is model-gated) | runtime |
 | `examples-code.md` / `examples-content.md` | a worked end-to-end dialogue example | runtime |
 | `maintenance.md` | the verification record and the update procedure for new guide revisions | contributor |
@@ -37,10 +41,10 @@ Enough to run the Step 0 assessment and the Step 1 diagnosis without loading any
 | 1 | Task | A specific action with measurable or observable success criteria. | `<task>` |
 | 2 | Role | A persona or expertise area that focuses the model's behavior. | `<role>` |
 | 3 | Context | Documents, data, or background — structured, and placed at the top. | `<documents>` |
-| 4 | Examples | Concrete samples of the desired output. First component to cut on frontier models. | `<examples>` |
+| 4 | Examples | Concrete samples of the desired output. First component to cut on Claude and GPT-5.6; on Gemini keep one when it pins a format. | `<examples>` |
 | 5 | Output specification | Format, length, tone, audience impact, success metric — positive framing first. | `<output_spec>` |
 | 6 | Constraints | Explicit rules, each with the reason it exists. | `<constraints>` |
-| 7 | Structure | Consistent delimiters separating the sections. Format-agnostic; XML on Claude. | — |
+| 7 | Structure | Consistent delimiters separating the sections. Format-agnostic; XML on Claude, Markdown elsewhere or when the vendor is unknown. | — |
 
 ### Source mapping
 
@@ -49,12 +53,12 @@ Each component links to the section of the official guide it derives from.
 | # | Component | Source section | Key quote |
 |---|---|---|---|
 | 1 | Task | [General principles > Be clear and direct](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#be-clear-and-direct) | "Being specific about your desired output can help enhance results." |
-| 2 | Role | [General principles > Give Claude a role](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#give-claude-a-role) | "Setting a role in the system prompt focuses Claude's behavior and tone." |
-| 3 | Context | [General principles > Long context prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#long-context-prompting) | "Put longform data at the top. Queries at the end can improve response quality by up to 30%." |
+| 2 | Role | [General principles > Give Claude a role](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#give-claude-a-role) | "Setting a role in the system prompt focuses Claude's behavior and tone for your use case." |
+| 3 | Context | [General principles > Long context prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#long-context-prompting) | "Put longform data at the top: Place your long documents and inputs near the top of your prompt, above your query, instructions, and examples." |
 | 4 | Examples | [General principles > Use examples effectively](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#use-examples-effectively) | "A few well-crafted examples … improve accuracy and consistency." |
 | 5 | Output specification | [Output and formatting > Control the format of responses](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#control-the-format-of-responses) | "Tell Claude what to do instead of what not to do." |
-| 6 | Constraints | [General principles > Add context to improve performance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#add-context-to-improve-performance) | "Explaining to Claude why such behavior is important can help Claude better understand your goals." |
-| 7 | Structure | [General principles > Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags) | "XML tags help Claude parse complex prompts unambiguously." |
+| 6 | Constraints | [General principles > Add context to improve performance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#add-context-to-improve-performance) | "Providing context or motivation behind your instructions … can help Claude better understand your goals …" |
+| 7 | Structure | [General principles > Structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags) | "XML tags help Claude parse complex prompts unambiguously …" |
 
 Sources for the secondary reference files are listed in `maintenance.md` > Additional source mapping.
 
@@ -80,11 +84,12 @@ Prefer the lower tier when in doubt. A well-aimed 2-component prompt beats a pad
 
 ## Calibrating for frontier models
 
-The current frontier models — Claude Opus 5, Claude Fable 5 / Mythos 5, and OpenAI GPT-5.6 Sol — converge on the same directive, and it sharpens how this framework should be used.
+Three of the four tracked vendors — Anthropic (Claude Opus 5, Claude Fable 5 / Mythos 5), OpenAI (GPT-5.6 Sol), and Google (Gemini 3.x) — converge on the same directive, and it sharpens how this framework should be used. **xAI is the exception and it is a load-bearing one**: for Grok, xAI asks for a thorough system prompt that names expectations and edge cases, so the trimming rules below are the wrong reflex on that runtime (`grok-considerations.md` > headline; the divergence table lives in `runtime-detection.md`).
 
 - **Claude Fable 5:** "Skills developed for prior models are often too prescriptive for Claude Fable 5 and can degrade output quality. Review and consider removing older instructions if default performance is better." (`claude-fable-5.md` > headline)
 - **Claude Opus 5:** verification instructions "cause over-verification on Claude Opus 5, and removing them reduces wasted tokens with no loss in quality" — and the official instruction is to *remove* them "rather than rewriting them". (`claude-opus-5.md` § 2)
-- **OpenAI GPT-5.6:** "Removing repeated instructions and examples and simplifying tool descriptions can improve task performance and token efficiency." Leaner system prompts scored ~10-15% higher while using 41-66% fewer tokens. (`codex-considerations.md` > "outcome-first, leaner prompts")
+- **OpenAI GPT-5.6:** "Removing repeated instructions and examples and simplifying tool descriptions can improve task performance and token efficiency." Leaner system prompts scored ~10-15% higher while using 41-66% fewer tokens ([OpenAI, GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6)). (`codex-considerations.md` > "outcome-first, leaner prompts")
+- **Google Gemini 3:** "Be concise in your input prompts. Gemini 3 responds best to direct, clear instructions." Its verbosity default runs the other way, though — the model "is less verbose and prefers providing direct, efficient answers", so length and tone have to be requested rather than curtailed. (`gemini-considerations.md` > headline principles)
 
 The framework's job is to make the *intent* precise — a clear task, a real success criterion, motivated constraints, the right output shape — **not to maximize component count.** On these models:
 
@@ -143,6 +148,8 @@ Flag any potential rule conflict before proceeding.
 
 **Template order matters:** Documents and context go at the top, task and instructions at the bottom. This follows the guide's recommendation for optimal long-context performance.
 
+**The template above is the XML form.** It is the Claude default and also the right default when the vendor is unresolved (`universal-baseline.md` > rule 2). For a Gemini or Grok target, the same components in the same order with Markdown headings are equivalent; `runtime-detection.md` says which applies.
+
 **The template is a superset, not a checklist.** Include only the sections the tier and the dialogue actually produced — a quick-tier prompt with `<task>` and `<output_spec>` alone is a correct result, not an incomplete one.
 
 ---
@@ -159,7 +166,7 @@ See the [Task Tiers](#task-tiers) table above for the canonical tier-to-componen
 
 For each component's formal definition, see `component-definitions.md`. For deterministic classification (what counts as `[OK]`, `[~~]`, `[--]`), see `component-rubrics.md`.
 
-For model-specific guidance, start at `claude-considerations.md` (the Claude router and divergence table), then load `claude-opus-5.md` or `claude-fable-5.md` for the target model. For OpenAI Codex, see `codex-considerations.md`.
+For model-specific guidance, start at `runtime-detection.md`: it maps the host to the model family and holds the cross-vendor divergence table. From there, `claude-considerations.md` routes the Anthropic branch (then `claude-opus-5.md` or `claude-fable-5.md`), `codex-considerations.md` covers OpenAI Codex, `gemini-considerations.md` covers Google Gemini, `grok-considerations.md` covers xAI Grok, and `universal-baseline.md` is the portable answer when the vendor cannot be resolved.
 
 For techniques that prevent hallucinations and improve factual accuracy (investigate before answering, ground in quotes, self-check), see `grounding-techniques.md`. Note that the self-check technique is model-gated — it is omitted when the target is Claude Opus 5.
 

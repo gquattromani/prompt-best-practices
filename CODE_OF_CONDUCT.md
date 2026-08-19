@@ -1,6 +1,6 @@
 # Code of Conduct
 
-This project follows the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
+This code of conduct is adapted from the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/), distributed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). It states the Covenant's principles in this project's own words and replaces the Covenant's enforcement ladder with the simplified enforcement section below.
 
 ## Summary
 

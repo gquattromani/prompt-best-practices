@@ -1,0 +1,16 @@
+{
+  "description": "Reminds the agent to assess an underspecified execution request with the prompt-best-practices skill before acting on it. One shell command, no runtime dependency; remove this file or the hooks key in the plugin manifest to disable.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'prompt-best-practices is installed. Before acting on this prompt, check it: if it is an execution request (write, draft, generate, implement, fix, refactor, build, create, design, analyze) at standard or complex tier that does not state its success criteria, output format or constraints, invoke the prompt-best-practices skill first and compose the final prompt for this runtime. Skip silently for micro-tasks, questions, and when the user asks to just do it.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

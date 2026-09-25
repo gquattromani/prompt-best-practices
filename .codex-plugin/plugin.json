@@ -1,6 +1,6 @@
 {
   "name": "prompt-best-practices",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Interactive prompt structuring skill using a 7-component framework derived from Anthropic's published prompting guide. Tier-adaptive dialogue, deterministic component rubric, and activation-regression fixtures.",
   "author": {
     "name": "Giandemetrio Quattromani"
@@ -29,7 +29,7 @@
     "defaultPrompt": [
       "Assess this prompt before running it.",
       "Which of the 7 components is my prompt missing?",
-      "Rebuild this prompt for Claude Opus 5."
+      "Rebuild this prompt for Claude Opus 5.5."
     ]
   },
   "hooks": "./hooks/activation-reminder-claude-codex.json"

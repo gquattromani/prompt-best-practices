@@ -215,15 +215,15 @@ Success: The endpoint sends a reset email, the token expires after 15 minutes, a
 </constraints>
 ```
 
-### What this prompt deliberately omits (Claude Opus 5 target)
+### What this prompt deliberately omits (Claude Opus 5.5 target)
 
-The last Constraint is the *investigate-before-answering* technique — it tells the model what to **read**, and it stays. What is absent is a *verification* clause ("verify the implementation against the criteria before finishing"): on Claude Opus 5 that clause causes over-verification, and the documented fix is to remove it rather than soften it (`claude-opus-5.md` § 2, `grounding-techniques.md` technique 3). If the target were Claude Fable 5 on a long autonomous run, the opposite call applies — keep an explicit verifier step, ideally a fresh-context verifier subagent (`claude-fable-5.md` § 8). Same task, same framework, different model column.
+The last Constraint is the *investigate-before-answering* technique — it tells the model what to **read**, and it stays. What is absent is a *verification* clause ("verify the implementation against the criteria before finishing"): on Claude Opus 5 / 5.5 that clause causes over-verification, and the documented fix is to remove it rather than soften it (`claude-opus-5-5.md` > Inherited § 2, `grounding-techniques.md` technique 3). If the target were Claude Fable 5.1 on a long autonomous run, the opposite call applies — keep an explicit verifier step, ideally a fresh-context verifier subagent (`claude-fable-5.md` § 8). Same task, same framework, different model column.
 
 ---
 
 ## Example 4: Same Task, Codex Target
 
-This example shows how the final prompt changes when the target runtime is **OpenAI Codex** (`gpt-5.6-sol`) instead of Claude. The 7 components stay the same; what changes is framing, a few Constraints, and the lean-prompt calibration GPT-5.6 rewards (see `codex-considerations.md` > "outcome-first, leaner prompts" and `framework.md` > "Calibrating for frontier models").
+This example shows how the final prompt changes when the target runtime is **OpenAI Codex** (`gpt-6-sol`) instead of Claude. The 7 components stay the same; what changes is framing, a few Constraints, and the lean-prompt calibration OpenAI's models reward (see `codex-considerations.md` > "outcome-first, leaner prompts" and `framework.md` > "Calibrating for frontier models").
 
 ### User Prompt
 "Build me a CLI tool that watches a directory and runs the linter on changed files"
@@ -246,7 +246,8 @@ run in the background during active work.
 
 <output_spec>
 Format: Full implementation — entry point, watcher module, lint runner, package.json.
-Deliver edits in apply_patch blocks.
+Deliver edits with the apply_patch tool. Final message: a short prose summary of what was
+built and how to run it, no tables.
 Tone: Production-ready code, no speculative comments or TODOs.
 Intended audience impact: A reviewer can run `pnpm build && pnpm link` and use the tool immediately.
 Success: The tool watches the target directory, detects changes within 200ms, and
@@ -256,14 +257,16 @@ runs eslint only on the changed files (not the whole project).
 <constraints>
 - Use chokidar for file watching and eslint's Node API (not the CLI): spawning a child process per change is too slow for the 200ms target.
 - Respect .gitignore: watching node_modules or build output wastes CPU and crashes on large trees.
-- This request authorizes creating and editing files in the tool's own package and running its build/test scripts. Stop and ask before touching other packages, installing global dependencies, or running any destructive git command.
+- This request authorizes creating and editing files in the tool's own package and running its build/test scripts without asking. Stop and ask before touching other packages, installing global dependencies, or running any destructive git command.
+- Add one focused test per stated behavior and nothing broader: the change is a new, self-contained package.
 - When reading the monorepo's package.json files, batch the reads in a single parallel tool call: sequential reads are unnecessarily slow.
 </constraints>
 ```
 
 ### What changed vs. the Claude-flavored template
 
-- **Output_spec references `apply_patch` format** — Codex expects edits in this form (see `codex-considerations.md` > "apply_patch format is strict").
-- **One autonomy-and-approval boundary, stated once** — GPT-5.6 rewards a single "what this request authorizes" statement over per-action "ask first" nagging (see `codex-considerations.md` > "Autonomy and approval boundaries").
-- **A Constraint requests parallel/batched tool calls** — GPT-5.6's multi-agent and parallel tool use benefit from being told (see `codex-considerations.md` > "Tool use").
-- **Leaner overall** — no `<examples>` block (the codebase is the implicit reference) and only a one-line role. On GPT-5.6, dropping non-behavioral sections improved eval scores while cutting tokens; a synthetic example here would dilute, not anchor.
+- **Output_spec points at the `apply_patch` tool and names the final-message style** — edits go through the tool's V4A diff, and GPT-6 defaults to lists and tables unless the style is stated (see `codex-considerations.md` > "Tool use" and "What changes on GPT-6" § 3).
+- **One authorization boundary, stated once, that grants as well as limits** — OpenAI rewards a single "what this request authorizes" statement over per-action "ask first" nagging, and GPT-6 otherwise tends to stop and ask (see `codex-considerations.md` > "Autonomy and approval boundaries").
+- **Test scope is stated, not a verification step** — GPT-6 tests thoroughly by default, so the Constraint sizes the tests instead of asking for more checking (`codex-considerations.md` > "What changes on GPT-6" § 5).
+- **A Constraint requests parallel reads** — the GPT-5.6 guidance says to parallelize independent reads (see `codex-considerations.md` > "Tool use").
+- **Leaner overall** — no `<examples>` block (the codebase is the implicit reference) and only a one-line role. In OpenAI's GPT-5.6 evals, dropping non-behavioral sections improved scores while cutting tokens; a synthetic example here would dilute, not anchor.

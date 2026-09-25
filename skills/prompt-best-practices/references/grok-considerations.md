@@ -4,23 +4,26 @@
 
 Load this file when the target runtime is xAI Grok — reached from `runtime-detection.md` for Grok Build, or for a Copilot/editor session whose picker is set to a Grok model. It covers the one place where this framework's lean-prompt reflex is wrong: xAI asks for a **detailed** system prompt, not a minimal one. It also covers the `reasoning_effort` ladder, native tool calling versus XML tool-call output, and prompt caching.
 
+xAI's documentation now brands the vendor "SpaceXAI" and describes itself as "Official SpaceXAI (xAI) developer documentation". This skill keeps the name xAI, the form the docs still give in parentheses.
+
 ## Sources
 
-- [Grok 4.6 model page](https://docs.x.ai/developers/grok-4-6) — flagship model, reasoning levels, caching and long-agent-loop guidance
-- [Models](https://docs.x.ai/developers/models) — current lineup and context windows
+- [Grok 4.7 model page](https://docs.x.ai/developers/grok-4-7) — flagship model, reasoning levels, caching and long-agent-loop guidance (the former `grok-4-6` URL now serves this page)
+- [Models](https://docs.x.ai/developers/models) — current lineup, context windows, and xAI's model recommendation
 - [Reasoning](https://docs.x.ai/developers/model-capabilities/text/reasoning) — the `reasoning_effort` ladder
-- [Grok Build overview](https://docs.x.ai/build/overview) — the coding agent and the model behind it
-- xAI's prompt-engineering guide for its coding model (`grok-code-fast-1`) — the source of the system-prompt-detail, context-specificity, and native-tool-calling recommendations quoted below
+- [Grok Build overview](https://docs.x.ai/build/overview) — the coding agent, its default model, and custom-model support
+- xAI's prompt-engineering guide for its coding model (`grok-code-fast-1`) — the source of the system-prompt-detail, context-specificity, and native-tool-calling recommendations quoted below. **Quotations last verified 2026-08-19**: on 2026-09-25 the guide was no longer listed in the documentation index and its known URLs returned 404. See "Known gap".
 
-## Recommended models (verified 2026-08-19)
+## Recommended models (verified 2026-09-25)
 
 | Model | Use case |
 |---|---|
-| `grok-4.6` | **Flagship and the model behind Grok Build** (500k context). xAI's own recommendation, on the [models page](https://docs.x.ai/developers/models) rather than the model page: "For everything else, including code, use Grok 4.6. It is the most intelligent and fastest model we've built." Assume this target when the runtime is Grok and nothing else is stated. |
-| `grok-4.5` | Previous flagship (500k context), still available. |
+| `grok-4.7` | **Flagship and the default model of Grok Build** (500k context). xAI's own recommendation, on the models page: "For everything else, including code, use Grok 4.7. It is the most capable model we've built." Assume this target when the runtime is Grok and nothing else is stated. |
+| `grok-4.6`, `grok-4.5` | Previous flagships (500k context), still available. |
+| `grok-build-0.1` | "SpaceXAI's intelligent coding model for agentic software, engineering, and workflow tasks" (256k context); `grok-code-fast-1` is now one of its aliases. |
 | `grok-4.3`, `grok-4.20-*` | 1M-context models, including reasoning / non-reasoning / multi-agent variants. |
 
-Grok Build exposes `/model <name>` in its TUI, so the target can be switched inside a session — worth one glance before assuming the default.
+Grok Build exposes `/model <name>` in its TUI and accepts any custom model declared in `~/.grok/config.toml`, so the target can be switched — even to another vendor — inside a session. Worth one glance before assuming the default.
 
 ## The headline principle: detail earns its keep here
 
@@ -30,11 +33,11 @@ Every other vendor tracked by this skill asks for leaner prompts. xAI does not:
 
 > "Detailed and concrete queries can lead to better performance. Try to avoid vague or underspecified prompts, as they can result in suboptimal results."
 
-This is a genuine divergence, not a wording difference, and it is the single most important thing on this page. A prompt trimmed to the bone for Gemini 3 or Claude Opus 5 — role dropped, constraints compressed to one line, edge cases left implicit — is *underspecified* by xAI's own standard.
+This is a genuine divergence, not a wording difference, and it is the single most important thing on this page. A prompt trimmed to the bone for Gemini 3.x or Claude Opus 5.5 — role dropped, constraints compressed to one line, edge cases left implicit — is *underspecified* by xAI's own standard.
 
 What this does **not** license: repetition, contradictory rules, or padding. "Thorough" in xAI's framing means the task, the expectations, and the edge cases are all present. The framework's answer is to keep more components rather than write more words:
 
-- Do not cut **Role** and **Constraints** to save space, as you would on Claude Opus 5 or GPT-5.6.
+- Do not cut **Role** and **Constraints** to save space, as you would on Claude Opus 5.5 or GPT-6.
 - Spell out **edge cases** in Component 6 — what to do when input is missing, ambiguous, or out of scope. This is the component most often dropped by the tier caps and the one xAI names explicitly.
 - Keep **Task** and **Output specification** as tight as anywhere else. Detail belongs in expectations and edge cases, not in restating the goal.
 
@@ -68,18 +71,19 @@ The same rule applies to any "reply in this envelope" instruction that duplicate
 | `high` (default) | "Uses more reasoning tokens for deeper thinking" | Challenging problems |
 | `xhigh` | "Maximum reasoning depth, with correspondingly higher latency" | Quality-first work; `grok-4.6` and later only |
 
-Reasoning cannot be disabled. As on the other vendors, depth is a parameter and does not belong in prompt text — xAI publishes no equivalent of Google's "think very hard" endorsement, so treat a reasoning nudge as noise here.
+"Reasoning cannot be disabled." As on the other vendors, depth is a parameter and does not belong in prompt text — xAI publishes no equivalent of Google's "think very hard" endorsement, so treat a reasoning nudge as noise here.
 
 ## Caching and long agent loops
 
-- > "We highly recommend setting a `prompt_cache_key`" — without it, requests "often pay full input price on a cache-cold server".
+- > "We highly recommend setting a `prompt_cache_key`" — without it "you often pay full input price on a cache-cold server".
 - > "Long agent loops additionally benefit from context compaction; for tool-heavy workloads see function calling."
+- On the Responses API, `grok-4.7` always returns encrypted reasoning; pass the reasoning items back unchanged in the next request.
 
-Neither is prompt text, but both shape prompt design: a structured prompt whose stable prefix (role, constraints, conventions) precedes the variable part is the cache-friendly shape, and it is what the template in `framework.md` already produces when Context and Task sit below the invariant sections. Worth one line in Component 6 only when the prompt is a reused template.
+None of these is prompt text, but they shape prompt design: a structured prompt whose stable prefix (role, constraints, conventions) precedes the variable part is the cache-friendly shape, and it is what the template in `framework.md` already produces when Context and Task sit below the invariant sections. Worth one line in Component 6 only when the prompt is a reused template.
 
 ## Framework mapping
 
-| 7-component | Where it lands on Grok 4.6 |
+| 7-component | Where it lands on Grok 4.7 |
 |---|---|
 | Task | Concrete and specific; vague or underspecified prompts are called out as a failure mode. |
 | Role | **Keep it.** Part of the "thorough system prompt" xAI asks for, not a component to trim. |
@@ -91,11 +95,11 @@ Neither is prompt text, but both shape prompt design: a structured prompt whose 
 
 ## Known gap
 
-xAI's published prompt-engineering guidance is written for its coding model (`grok-code-fast-1`); the `grok-4.6` page itself documents capabilities, caching, and reasoning rather than prompt composition. The system-prompt-detail, context-specificity, and native-tool-calling recommendations above are therefore a **transfer** from that guide to the current flagship, not a vendor statement about `grok-4.6`. Nothing contradicts them, and Grok Build runs `grok-4.6`, so the transfer is the best available reading — but treat it as the item to re-verify first when xAI publishes model-specific prompting guidance.
+xAI's published prompt-engineering guidance was written for its coding model (`grok-code-fast-1`, now an alias of `grok-build-0.1`); the `grok-4.7` page documents capabilities, caching, and reasoning rather than prompt composition. The system-prompt-detail, context-specificity, and native-tool-calling recommendations above are therefore a **transfer** from that guide to the current flagship, not a vendor statement about `grok-4.7`. The gap widened on 2026-09-25: the guide itself could no longer be opened, so the quotations stand on the 2026-08-19 verification. Nothing contradicts them, and Grok Build runs `grok-4.7`, so the transfer is the best available reading — but treat it as the first item to re-verify, and replace it as soon as xAI publishes model-specific prompting guidance.
 
 ## Update procedure
 
 1. Re-check the models table and the "verified" date against the models page, and confirm which model powers Grok Build.
-2. Look for a `grok-4.6`-specific prompting guide. If one ships, replace the transferred recommendations above and remove the "Known gap" section.
+2. Look for a flagship-specific prompting guide, or for the coding-model guide at a new URL. If one ships, re-verify or replace the transferred recommendations above and shrink the "Known gap" section.
 3. Re-verify the `reasoning_effort` ladder (`xhigh` availability moves with the model generation) and the caching guidance.
 4. Re-diff the "Prompt size" and "Examples" rows in `runtime-detection.md` — the detail-over-brevity divergence is the reason this file exists.

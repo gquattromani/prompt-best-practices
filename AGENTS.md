@@ -32,9 +32,9 @@ The components are the same everywhere; the dialect is not. Resolve the target b
 
 | Target | Compose it this way |
 |---|---|
-| Anthropic Claude | XML tags. Long data at the top, task at the end. **Remove** self-check and verification clauses on Opus 5 (keep them on Fable 5 long runs). State response length explicitly — `effort` does not shorten output. Reasoning depth is the `effort` parameter, never "think hard" in text. |
-| OpenAI GPT | Markdown headings or XML. Lean: no repeated instruction, no example that does not change behavior. Approval boundaries stated once. `apply_patch` shape when the task edits files. |
-| Google Gemini | Markdown headings or XML tags, one or the other consistently. Data first, instruction last, anchored with "Based on the information above". State length and tone — the default is terse. Carry **no** sampling instruction: the vendor recommends keeping temperature at its default. Keep an example when it pins a format; drop chain-of-thought scaffolding. "Think very hard before answering" is legitimate here, on heavy-reasoning tasks only. |
+| Anthropic Claude | XML tags. Long data at the top, task at the end. **Remove** self-check and verification clauses on Opus 5 / 5.5 (keep them on Fable long runs). State response length explicitly — `effort` does not shorten output. Reasoning depth is the `effort` parameter, never "think hard" in text. |
+| OpenAI GPT | Markdown headings or XML. Lean: no repeated instruction, no example that does not change behavior. One authorization boundary, stated once — on GPT-6 it also grants the autonomy the request implies. State the writing style. The `apply_patch` tool when the task edits files. |
+| Google Gemini | Markdown headings or XML tags, one or the other consistently. Data first, instruction last, anchored with "Based on the information above". State length and tone — the default is terse. Carry **no** sampling instruction: the vendor says to remove sampling parameters. Keep an example when it pins a format; drop chain-of-thought scaffolding. "Think very hard before answering" is legitimate here, on heavy-reasoning tasks only. |
 | xAI Grok | The one runtime that asks for a *thorough* prompt: keep Role, spell out edge cases in the constraints, enumerate the context paths and exclude the rest. Never request tool calls in an XML envelope — native function calling instead. |
 | Unknown, or a multi-model host | Universal baseline: XML tags (a hidden model may be Claude, and no other vendor penalizes them), context first, at most one example, explicit length, rules with their reason, and no vendor-specific parameter text (`temperature`, `effort`, `thinking_level`, `verbosity`), no self-check clause, no prefill. |
 
@@ -50,7 +50,7 @@ The components are the same everywhere; the dialect is not. Resolve the target b
 ## Rules
 
 - Frontier models reward leaner prompts. Padding a quick-tier prompt up to seven components makes it worse, not better.
-- Per-vendor and per-model guidance is not additive: remove self-check clauses on Claude Opus 5 and keep them on Claude Fable 5 long runs; trim for Claude, GPT and Gemini but not for Grok, which asks for detail. Applying the wrong column is a regression, not a style choice.
+- Per-vendor and per-model guidance is not additive: remove self-check clauses on Claude Opus 5 / 5.5 and keep them on Claude Fable long runs; cap subagent delegation on Opus, request it on GPT-6; trim for Claude, GPT and Gemini but not for Grok, which asks for detail. Applying the wrong column is a regression, not a style choice.
 - Set reasoning depth with the runtime's parameter (`effort`, `reasoning.effort`, `thinking_level`, `reasoning_effort`), not with "think hard" text — Google Gemini on heavy-reasoning tasks is the single documented exception.
 - No emoji. Use the text markers `[OK]`, `[~~]`, `[--]`.
 - Reply in the language of the user's prompt.
@@ -78,11 +78,11 @@ Reference files in `skills/prompt-best-practices/references/` provide detailed t
 - `examples-content.md` / `examples-code.md` — dialogue examples (content tasks / code tasks)
 - `grounding-techniques.md` — techniques to prevent hallucinations (technique 3, self-check, is model-gated)
 - `claude-considerations.md` — Anthropic Claude router: per-model file selection, family-wide behaviors, and the divergence table where per-model tuning conflicts
-- `claude-opus-5.md` — tuning notes for Claude Opus 5 (default target)
-- `claude-fable-5.md` — tuning notes for Claude Fable 5 / Mythos 5 (highest-capability tier)
-- `codex-considerations.md` — tuning notes for OpenAI Codex (GPT-5.6 Sol flagship, Terra / Luna siblings)
-- `gemini-considerations.md` — tuning notes for Google Gemini (Gemini 3.x: terse defaults, sampling defaults, `thinking_level`)
-- `grok-considerations.md` — tuning notes for xAI Grok (`grok-4.6`: thorough prompts, native tool calling)
+- `claude-opus-5-5.md` — tuning notes for Claude Opus 5.5 (default target) and Claude Opus 5
+- `claude-fable-5.md` — tuning notes for Claude Fable 5.1 / Mythos 5.1 and Fable 5 / Mythos 5 (highest-capability tier)
+- `codex-considerations.md` — tuning notes for OpenAI Codex (GPT-6 Sol / Astra / Luna; GPT-5.6 previous generation)
+- `gemini-considerations.md` — tuning notes for Google Gemini (Gemini 3.x, 3.8 Flash current: terse defaults, no sampling parameters, `thinking_level`)
+- `grok-considerations.md` — tuning notes for xAI Grok (`grok-4.7`: thorough prompts, native tool calling)
 - `maintenance.md` — **contributor-only**: verification record, source fingerprint, update procedure. Do not load it to build a prompt.
 
 Test assets in `tests/`:

@@ -78,7 +78,7 @@ Hosts that need neither: Gemini CLI, Antigravity, OpenCode, Swival and Qoder all
 
 ## Prompt dialect per host
 
-An adapter decides *whether* the skill loads on a host. It also decides *what the skill writes*: the host determines which model family will consume the prompt, and the vendors disagree — XML tags on Claude, terse-by-default and no sampling instructions on Gemini, thorough prompts with edge cases on Grok, lean prompts on GPT-5.6.
+An adapter decides *whether* the skill loads on a host. It also decides *what the skill writes*: the host determines which model family will consume the prompt, and the vendors disagree — XML tags on Claude, terse-by-default and no sampling instructions on Gemini, thorough prompts with edge cases on Grok, lean prompts with an explicit authorization boundary on GPT-6.
 
 That mapping is deliberately **not** duplicated here. `skills/prompt-best-practices/references/runtime-detection.md` is the single source of truth: host → model family → which vendor file to load, plus the cross-vendor divergence table and the universal baseline used when a host is multi-model. In short:
 

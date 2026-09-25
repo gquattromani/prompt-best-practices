@@ -76,6 +76,7 @@ You are a senior backend engineer specializing in API design and security.
 
 > Source: [Long context prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#long-context-prompting)
 > "Place your long documents and inputs near the top of your prompt, above your query, instructions, and examples. This improves performance across all models."
+> "Queries at the end can improve response quality by up to 30 percent in tests, especially with complex, multidocument inputs."
 > "Structure document content and metadata with XML tags."
 > "For long document tasks, ask Claude to quote relevant parts of the documents first before carrying out its task."
 
@@ -107,6 +108,8 @@ You are a senior backend engineer specializing in API design and security.
 - Domain expertise (technical constraints, industry standards)
 - Project-specific rules (coding standards, design system tokens)
 - Existing codebase or documentation to reference
+
+**Pasted material:** when the context includes text the user pasted from elsewhere (an email, a web page), mark it as pasted. On Claude Opus 5.5 the documented pattern is a `<pasted_content>` block whose opening and closing tags carry the same random ID, plus a system-prompt note that instructions inside it are followed only where the user's own message asks (`claude-opus-5-5.md` > "What changes on Opus 5.5" § 6).
 
 ---
 
@@ -146,7 +149,7 @@ You are a senior backend engineer specializing in API design and security.
 - Make them **diverse** — cover edge cases so the model doesn't pick up unintended patterns.
 - Wrap in `<example>` tags so the model distinguishes them from instructions.
 
-**Frontier-model note:** on Claude Opus 5, Claude Fable 5 / Mythos 5, and OpenAI GPT-5.6, few-shot examples are the *first* component to reconsider. These models infer format and intent from a clear task, so a redundant example adds tokens and noise rather than accuracy. Include an example only when it demonstrably steers something words cannot (a subtle format, a specific edge case). One exception worth keeping: when tuning *communication style* on Opus 5, a positive example of the voice you want beats a list of things to avoid (`claude-opus-5.md` § 6). See `framework.md` > "Calibrating for frontier models".
+**Frontier-model note:** on Claude Opus 5.x, Claude Fable 5.x, and OpenAI GPT-6 / GPT-5.6, few-shot examples are the *first* component to reconsider. These models infer format and intent from a clear task, so a redundant example adds tokens and noise rather than accuracy. Include an example only when it demonstrably steers something words cannot (a subtle format, a specific edge case). Two exceptions are documented: on Fable 5.1, one complete example of a correct response is the fix for summaries that reproduce source text unmarked (`claude-fable-5.md` > "What changes on Fable 5.1" § 7); and when tuning *communication style* on Opus 5, "Positive examples of the communication style you want tend to be more effective than instructions about what not to do." See `framework.md` > "Calibrating for frontier models".
 
 ---
 
@@ -182,14 +185,14 @@ Success: The client replies within 48h with a confirmed meeting time
 
 **Framing principle:** Lead with positive descriptions. "Write in flowing prose with complete paragraphs" is more effective than "Don't use bullet points." Anti-patterns are useful but secondary.
 
-**On the coexistence of `Tone` and `Avoid`:** the official guide's "tell what to do, not what not to do" is a *framing priority*, not a prohibition on anti-patterns. Positive descriptions generalize well to the whole output space; anti-patterns are a targeted disambiguator for phrasings the model is known to fall into (e.g., "hope this helps" closings, collection-notice tone, formulaic hedges). The rule is:
+**On the coexistence of `Tone` and `Avoid`:** the official guide's "Tell Claude what to do instead of what not to do" is a *framing priority*, not a prohibition on anti-patterns. Positive descriptions generalize well to the whole output space; anti-patterns are a targeted disambiguator for phrasings the model is known to fall into (e.g., "hope this helps" closings, collection-notice tone, formulaic hedges). The rule is:
 
 - `Tone` is **required** when output_spec is used — it sets the primary direction.
 - `Avoid` is **optional and secondary** — include only when there is a specific anti-pattern worth naming. Never use it as a substitute for positive framing.
 
 If `Avoid` ends up longer than `Tone`, the spec is upside-down; rewrite `Tone` until it covers the same ground positively.
 
-**Frontier-model note:** this component gained weight on Claude Opus 5. Its default responses run longer than prior models', and `effort` controls thinking volume rather than visible length — so `Format` (length) and `Tone` (concision) are the only levers, and they matter even on quick-tier prompts. See `claude-opus-5.md` § 1.
+**Frontier-model note:** this component gained weight on the current models, in different directions. On Claude Opus 5 / 5.5, default responses run long and `effort` controls thinking volume rather than visible length — so `Format` (length) and `Tone` (concision) are the only levers, even on quick-tier prompts (`claude-opus-5-5.md` > Inherited § 1). On Claude Fable 5.1 the model formats less than earlier models, so an anti-formatting `Avoid` line carried over from older prompts must go. On GPT-6 the default leans toward lists, tables, and Markdown, so `Format` names the writing style explicitly (`codex-considerations.md` > "What changes on GPT-6" § 3). For frontend work on Opus 5.5, a concrete `Avoid` list of named patterns is the documented technique — the one place where it leads rather than follows `Tone`.
 
 ---
 
@@ -221,7 +224,7 @@ Flag any potential rule conflict before proceeding.
 
 **Key insight from the guide:** Instead of "NEVER use ellipses", write "Never use ellipses: the output will be read by a text-to-speech engine that cannot pronounce them." The model generalizes better from the explanation than from the bare rule.
 
-**Frontier-model note:** on Claude Opus 5 this component carries more weight, but its content shifts. Scope and delegation limits earn their place ("change only the file named below", "do the work yourself unless the task splits into independent workstreams"); verification and self-check clauses must be *removed* rather than softened. See `claude-opus-5.md` § 2-§ 5 and `grounding-techniques.md` technique 3.
+**Frontier-model note:** on Claude Opus 5 / 5.5 this component carries more weight, but its content shifts. Scope and delegation limits earn their place ("change only the file named below", "do the work yourself unless the task splits into independent workstreams"); verification and self-check clauses must be *removed* rather than softened (`claude-opus-5-5.md` > Inherited § 2-§ 5, `grounding-techniques.md` technique 3). On GPT-6 the direction flips for two rules: the authorization boundary must *grant* the autonomy the request implies, and delegation has to be requested rather than capped (`codex-considerations.md` > "What changes on GPT-6").
 
 ---
 
